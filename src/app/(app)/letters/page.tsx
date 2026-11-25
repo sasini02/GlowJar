@@ -35,7 +35,7 @@ async function Letters() {
           </div>
           <Link
             href="/letters/new"
-            className="inline-flex min-h-12 items-center gap-2 rounded-md bg-glow px-6 text-label text-ink shadow-card lg:hidden"
+            className="inline-flex min-h-12 items-center gap-2 rounded-md bg-glow px-6 text-label text-on-glow shadow-card lg:hidden"
           >
             <PenLine className="size-4" strokeWidth={1.75} aria-hidden="true" />
             Write a letter

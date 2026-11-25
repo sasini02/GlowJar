@@ -53,16 +53,35 @@ export async function getFeedWins(viewerId: string, category: WinCategory | null
   return withCelebrations(data, viewerId);
 }
 
-/** All of the viewer's wins, public and private. */
-export async function getMyWins(viewerId: string): Promise<WinView[]> {
+export type JarVisibility = "all" | "public" | "private";
+
+/** The viewer's own wins, optionally narrowed by visibility and a full-text search. */
+export async function getMyWins(
+  viewerId: string,
+  { visibility = "all", search = "" }: { visibility?: JarVisibility; search?: string } = {},
+): Promise<WinView[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("wins")
     .select(WIN_COLUMNS)
     .eq("user_id", viewerId)
     .order("created_at", { ascending: false });
+  if (visibility !== "all") query = query.eq("is_public", visibility === "public");
+  if (search) query = query.textSearch("search", search, { type: "websearch", config: "english" });
+
+  const { data, error } = await query;
   if (error) throw error;
   return withCelebrations(data, viewerId);
+}
+
+export async function countMyWins(viewerId: string): Promise<number> {
+  const supabase = await createClient();
+  const { count, error } = await supabase
+    .from("wins")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", viewerId);
+  if (error) throw error;
+  return count ?? 0;
 }
 
 export async function getOwnWin(viewerId: string, id: string): Promise<WinView | null> {

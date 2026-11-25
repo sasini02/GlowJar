@@ -34,7 +34,7 @@ function TabList({ pathname }: { pathname: string | null }) {
         <Link
           href="/new"
           aria-label="Add a win"
-          className="inline-flex size-13 items-center justify-center rounded-pill bg-glow text-ink shadow-card transition-transform duration-200 active:scale-95"
+          className="inline-flex size-13 items-center justify-center rounded-pill bg-glow text-on-glow shadow-card transition-transform duration-200 active:scale-95"
         >
           <Plus className="size-6" strokeWidth={ICON_STROKE} aria-hidden="true" />
         </Link>

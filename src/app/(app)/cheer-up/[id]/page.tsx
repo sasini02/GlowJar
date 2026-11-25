@@ -34,7 +34,7 @@ async function CheerUp({ params }: Pick<PageProps<"/cheer-up/[id]">, "params">) 
       <div className="mx-auto max-w-xl py-10">
         <h1 className="font-serif text-display">This light has moved on.</h1>
         <p className="mt-3 text-ink-muted">The win from this reminder isn&apos;t in your jar anymore. Plenty of others are.</p>
-        <Link href="/jar" className="mt-8 inline-flex min-h-12 items-center rounded-md bg-glow px-6 text-label text-ink shadow-card">
+        <Link href="/jar" className="mt-8 inline-flex min-h-12 items-center rounded-md bg-glow px-6 text-label text-on-glow shadow-card">
           Open my jar
         </Link>
       </div>
@@ -72,7 +72,7 @@ async function CheerUp({ params }: Pick<PageProps<"/cheer-up/[id]">, "params">) 
 
       <Link
         href="/new"
-        className="inline-flex min-h-12 w-fit items-center rounded-md bg-glow px-6 text-label text-ink shadow-card transition-shadow duration-200 hover:shadow-lift"
+        className="inline-flex min-h-12 w-fit items-center rounded-md bg-glow px-6 text-label text-on-glow shadow-card transition-shadow duration-200 hover:shadow-lift"
       >
         Add today&apos;s win
       </Link>

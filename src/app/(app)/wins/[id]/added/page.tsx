@@ -45,7 +45,7 @@ async function WinAdded({ params }: Pick<PageProps<"/wins/[id]/added">, "params"
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
         <Link
           href="/new"
-          className="inline-flex min-h-12 items-center justify-center rounded-md bg-glow px-6 text-label text-ink shadow-card transition-shadow duration-200 hover:shadow-lift"
+          className="inline-flex min-h-12 items-center justify-center rounded-md bg-glow px-6 text-label text-on-glow shadow-card transition-shadow duration-200 hover:shadow-lift"
         >
           Add another
         </Link>

@@ -104,7 +104,7 @@ export function LetterComposer({ today }: { today: string }) {
       <button
         type="submit"
         disabled={!body.trim() || !dateIsValid || sealing}
-        className="inline-flex min-h-12 items-center justify-center rounded-md bg-glow px-6 text-label text-ink shadow-card transition-shadow duration-200 hover:shadow-lift disabled:opacity-60 disabled:shadow-none"
+        className="inline-flex min-h-12 items-center justify-center rounded-md bg-glow px-6 text-label text-on-glow shadow-card transition-shadow duration-200 hover:shadow-lift disabled:opacity-60 disabled:shadow-none"
       >
         {sealing ? "Sealing…" : "Seal the letter"}
       </button>

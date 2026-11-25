@@ -36,7 +36,7 @@ async function Letter({ params, searchParams }: Pick<PageProps<"/letters/[id]">,
           />
           <span
             aria-hidden="true"
-            className="relative mx-auto flex size-12 items-center justify-center rounded-pill bg-glow text-ink shadow-card"
+            className="relative mx-auto flex size-12 items-center justify-center rounded-pill bg-glow text-on-glow shadow-card"
           >
             <Lock className="size-5" strokeWidth={1.75} />
           </span>
@@ -82,7 +82,7 @@ async function Letter({ params, searchParams }: Pick<PageProps<"/letters/[id]">,
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link
               href="/letters/new"
-              className="inline-flex min-h-12 items-center justify-center rounded-md bg-glow px-6 text-label text-ink shadow-card"
+              className="inline-flex min-h-12 items-center justify-center rounded-md bg-glow px-6 text-label text-on-glow shadow-card"
             >
               Write back
             </Link>

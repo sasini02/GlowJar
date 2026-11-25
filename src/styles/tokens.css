@@ -13,6 +13,8 @@
   --ink-muted: #646877;
   /* The brand colour: a win's light. Primary button fill (ink text on it), the glow when a win is posted, the active celebrate state. Use once per view as the main action. */
   --glow: #F2B544;
+  /* Text and icons on glow (primary buttons, the Celebrated pill). Dark ink in both themes, because Night's ink is light and would fail contrast on honey. */
+  --on-glow: #2A2D3A;
   /* Firefly dots, the halo behind a posted win, progress in the jar. Fill only, never text. */
   --glow-soft: #F7D48C;
   /* Honey-coloured text and icons on surface (links, 'You celebrated this'). 4.5:1 in both themes. */
@@ -53,6 +55,7 @@
   --ink: #F2EEE6;
   --ink-muted: #A7AABA;
   --glow: #F5BE55;
+  --on-glow: #2A2D3A;
   --glow-soft: #8A6A2C;
   --glow-ink: #F5BE55;
   --dusk: #3A4675;
@@ -78,6 +81,7 @@
     --ink: #F2EEE6;
     --ink-muted: #A7AABA;
     --glow: #F5BE55;
+    --on-glow: #2A2D3A;
     --glow-soft: #8A6A2C;
     --glow-ink: #F5BE55;
     --dusk: #3A4675;
@@ -103,6 +107,7 @@
   --color-ink: var(--ink);
   --color-ink-muted: var(--ink-muted);
   --color-glow: var(--glow);
+  --color-on-glow: var(--on-glow);
   --color-glow-soft: var(--glow-soft);
   --color-glow-ink: var(--glow-ink);
   --color-dusk: var(--dusk);

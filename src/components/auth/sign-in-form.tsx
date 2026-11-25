@@ -45,7 +45,7 @@ export function SignInForm() {
       <button
         type="submit"
         disabled={pending}
-        className="mt-1 inline-flex min-h-12 items-center justify-center rounded-md bg-glow px-6 text-label text-ink shadow-card transition-shadow duration-200 hover:shadow-lift disabled:opacity-70"
+        className="mt-1 inline-flex min-h-12 items-center justify-center rounded-md bg-glow px-6 text-label text-on-glow shadow-card transition-shadow duration-200 hover:shadow-lift disabled:opacity-70"
       >
         {pending ? "Sending…" : "Send me a sign-in link"}
       </button>

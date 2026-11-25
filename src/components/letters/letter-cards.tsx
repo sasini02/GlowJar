@@ -18,7 +18,7 @@ export function SealedEnvelope({ letter, today }: { letter: LetterSummary; today
       />
       <span
         aria-hidden="true"
-        className="relative mx-auto flex size-10 items-center justify-center rounded-pill bg-glow text-ink shadow-card"
+        className="relative mx-auto flex size-10 items-center justify-center rounded-pill bg-glow text-on-glow shadow-card"
       >
         <Lock className="size-4" strokeWidth={1.75} />
       </span>

@@ -34,3 +34,17 @@ export function daysBetween(fromIso: string, toIso: string): number {
 export function formatLongDate(isoDate: string): string {
   return toUtcNoon(isoDate).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 }
+
+/** "October", or "October 2025" when `withYear` is set. Takes any date inside the month. */
+export function formatMonth(isoDate: string, { withYear = false }: { withYear?: boolean } = {}): string {
+  return toUtcNoon(isoDate).toLocaleDateString("en-GB", {
+    month: "long",
+    ...(withYear ? { year: "numeric" } : {}),
+    timeZone: "UTC",
+  });
+}
+
+/** "Oct 25" style label for the jar shelf. */
+export function formatShortMonth(isoDate: string): string {
+  return toUtcNoon(isoDate).toLocaleDateString("en-GB", { month: "short", year: "2-digit", timeZone: "UTC" });
+}

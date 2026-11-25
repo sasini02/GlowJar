@@ -1,11 +1,14 @@
 "use server";
 
+import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUserId } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { Enums } from "@/lib/supabase/database.types";
 
 const NUDGE_TIMES: Enums<"nudge_time">[] = ["morning", "lunch", "evening", "night"];
+const THEMES: Enums<"theme_preference">[] = ["day", "night", "auto"];
+const TIME_OF_DAY = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 export type SetupState = { error: string | null };
 
@@ -56,6 +59,63 @@ export async function completeSetup(_previous: SetupState, formData: FormData): 
   }
 
   redirect("/feed");
+}
+
+export type SettingsState = { status: "idle" | "saved" | "error"; message: string | null };
+
+export async function updateSettings(_previous: SettingsState, formData: FormData): Promise<SettingsState> {
+  const userId = await requireUserId();
+
+  const username = String(formData.get("username") ?? "").replace(/\s+/g, " ").trim();
+  const nudgeTime = String(formData.get("nudge_time") ?? "") as Enums<"nudge_time">;
+  const quietStart = String(formData.get("quiet_start") ?? "");
+  const quietEnd = String(formData.get("quiet_end") ?? "");
+  const visibility = String(formData.get("default_visibility") ?? "") as Enums<"visibility">;
+
+  const usernameError = validateUsername(username);
+  if (usernameError) return { status: "error", message: usernameError };
+  if (!NUDGE_TIMES.includes(nudgeTime)) return { status: "error", message: "Pick a time for your daily nudge." };
+  if (!TIME_OF_DAY.test(quietStart) || !TIME_OF_DAY.test(quietEnd)) {
+    return { status: "error", message: "Quiet hours need a start and an end time." };
+  }
+  if (visibility !== "public" && visibility !== "private") {
+    return { status: "error", message: "Choose Public or Just me for new wins." };
+  }
+
+  const supabase = await createClient();
+  // Changing quiet hours re-books the next cheer-up through the profiles trigger.
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      username,
+      nudge_time: nudgeTime,
+      quiet_start: quietStart,
+      quiet_end: quietEnd,
+      default_visibility: visibility,
+    })
+    .eq("user_id", userId);
+
+  if (error) {
+    if (error.code === "23505") return { status: "error", message: "Someone already has that name. Try another, or shuffle." };
+    console.error("updateSettings failed", error.code, error.message);
+    return { status: "error", message: "We couldn't save that just now. Please try again." };
+  }
+
+  refresh();
+  return { status: "saved", message: "Saved." };
+}
+
+export async function updateTheme(theme: Enums<"theme_preference">): Promise<{ error: string | null }> {
+  const userId = await requireUserId();
+  if (!THEMES.includes(theme)) return { error: "Pick Day, Night or Auto." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("profiles").update({ theme }).eq("user_id", userId);
+  if (error) {
+    console.error("updateTheme failed", error.code, error.message);
+    return { error: "We couldn't save your theme. It will still apply on this device." };
+  }
+  return { error: null };
 }
 
 function validateUsername(username: string): string | null {

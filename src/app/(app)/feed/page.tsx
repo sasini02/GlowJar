@@ -3,17 +3,20 @@ import { Fragment, Suspense } from "react";
 import { JarMark } from "@/components/brand/jar-mark";
 import { CategoryFilters } from "@/components/feed/category-filters";
 import { JarCard } from "@/components/feed/jar-card";
+import { OnThisDayCard } from "@/components/jar/on-this-day-card";
 import { QuickAdd } from "@/components/feed/quick-add";
 import { WinCard } from "@/components/wins/win-card";
 import { requireOnboardedProfile } from "@/lib/auth";
 import { CATEGORIES, CATEGORY_ORDER, type WinCategory } from "@/lib/categories";
+import { getOnThisDay } from "@/lib/jar/queries";
 import { greetingFor, localHour } from "@/lib/time";
 import { countWinsThisMonth, getFeedWins } from "@/lib/wins/queries";
 
 export const metadata: Metadata = { title: "Feed" };
 
-// The "Your jar" card slots in after this many wins so it's seen without leading the feed.
+// Personal cards slot in after a few wins so they're seen without leading the feed.
 const JAR_CARD_POSITION = 2;
+const ON_THIS_DAY_POSITION = 5;
 
 export default function FeedPage({ searchParams }: PageProps<"/feed">) {
   return (
@@ -28,10 +31,12 @@ async function Feed({ searchParams }: Pick<PageProps<"/feed">, "searchParams">) 
   const { category: categoryParam } = await searchParams;
   const category = CATEGORY_ORDER.includes(categoryParam as WinCategory) ? (categoryParam as WinCategory) : null;
 
-  const [wins, monthCount] = await Promise.all([
+  const [wins, monthCount, onThisDay] = await Promise.all([
     getFeedWins(profile.user_id, category),
     countWinsThisMonth(profile.user_id, profile.timezone),
+    getOnThisDay(),
   ]);
+  const onThisDayCard = onThisDay && <OnThisDayCard win={onThisDay} className="mb-6" />;
   const greeting = greetingFor(localHour(profile.timezone));
   const returnTo = category ? `/feed?category=${category}` : "/feed";
 
@@ -51,6 +56,7 @@ async function Feed({ searchParams }: Pick<PageProps<"/feed">, "searchParams">) 
       {wins.length === 0 ? (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <JarCard monthCount={monthCount} />
+          {onThisDayCard}
           <p className="self-center text-ink-muted">
             {category
               ? `No ${CATEGORIES[category].label.toLowerCase()} lights yet. Yours could be the first.`
@@ -62,10 +68,12 @@ async function Feed({ searchParams }: Pick<PageProps<"/feed">, "searchParams">) 
           {wins.map((win, index) => (
             <Fragment key={win.id}>
               {index === JAR_CARD_POSITION && <JarCard monthCount={monthCount} />}
+              {index === ON_THIS_DAY_POSITION && onThisDayCard}
               <WinCard win={win} returnTo={returnTo} className="mb-6" />
             </Fragment>
           ))}
           {wins.length <= JAR_CARD_POSITION && <JarCard monthCount={monthCount} />}
+          {wins.length <= ON_THIS_DAY_POSITION && onThisDayCard}
         </div>
       )}
 

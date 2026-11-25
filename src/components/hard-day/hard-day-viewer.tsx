@@ -41,7 +41,7 @@ export function HardDayViewer({ wins }: { wins: PastWin[] }) {
           {breatheButton}
           <Link
             href="/new"
-            className="inline-flex min-h-12 items-center justify-center rounded-md bg-glow px-6 text-label text-ink shadow-card"
+            className="inline-flex min-h-12 items-center justify-center rounded-md bg-glow px-6 text-label text-on-glow shadow-card"
           >
             Add a small win
           </Link>
@@ -66,7 +66,7 @@ export function HardDayViewer({ wins }: { wins: PastWin[] }) {
           <button
             type="button"
             onClick={() => setIndex((current) => (current + 1) % wins.length)}
-            className="inline-flex min-h-12 items-center justify-center rounded-md bg-glow px-6 text-label text-ink shadow-card"
+            className="inline-flex min-h-12 items-center justify-center rounded-md bg-glow px-6 text-label text-on-glow shadow-card"
           >
             Show me another
           </button>

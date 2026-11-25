@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { requireUserId } from "@/lib/auth";
 import { checkPublicWin } from "@/lib/moderation";
 import { createClient } from "@/lib/supabase/server";
-import { parseWinInput } from "@/lib/wins/validation";
+import { parseWinInput, type WinInput } from "@/lib/wins/validation";
 
 export type WinFormState = { error: string | null };
 
@@ -21,15 +21,9 @@ async function moderationError(text: string, isPublic: boolean): Promise<string 
   return result.allowed ? null : (result.message ?? "This one can't be shared publicly, but you can keep it just for you.");
 }
 
-export async function createWin(_previous: WinFormState, formData: FormData): Promise<WinFormState> {
-  const userId = await requireUserId();
-  const parsed = parseWinInput(formData);
-  if ("error" in parsed) return { error: parsed.error };
+type InsertResult = { id: string } | { error: string };
 
-  const { text, emoji, category, isPublic } = parsed.data;
-  const blocked = await moderationError(text, isPublic);
-  if (blocked) return { error: blocked };
-
+async function insertWin(userId: string, { text, emoji, category, isPublic }: WinInput): Promise<InsertResult> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("wins")
@@ -39,11 +33,59 @@ export async function createWin(_previous: WinFormState, formData: FormData): Pr
 
   if (error) {
     if (error.code === RATE_LIMITED) return { error: error.message };
-    console.error("createWin failed", error.code, error.message);
+    console.error("insertWin failed", error.code, error.message);
     return { error: "We couldn't save your win just now. Your words are still here, so try again in a moment." };
   }
+  return { id: data.id };
+}
 
-  redirect(`/wins/${data.id}/added`);
+export async function createWin(_previous: WinFormState, formData: FormData): Promise<WinFormState> {
+  const userId = await requireUserId();
+  const parsed = parseWinInput(formData);
+  if ("error" in parsed) return { error: parsed.error };
+
+  const blocked = await moderationError(parsed.data.text, parsed.data.isPublic);
+  if (blocked) return { error: blocked };
+
+  const result = await insertWin(userId, parsed.data);
+  if ("error" in result) return { error: result.error };
+
+  redirect(`/wins/${result.id}/added`);
+}
+
+export type QueuedWinResult =
+  | { status: "saved" }
+  /** Saved, but as Just me, because the public version didn't pass moderation. */
+  | { status: "saved_private"; message: string }
+  | { status: "retry" }
+  /** Can never be saved as written (for example too long); the device should drop it. */
+  | { status: "invalid"; message: string };
+
+/**
+ * Saves a win that was written offline and queued on the device. The writer
+ * isn't looking at a form any more, so a public win that fails moderation is
+ * kept as Just me rather than lost, and the writer is told why.
+ */
+export async function saveQueuedWin(input: WinInput): Promise<QueuedWinResult> {
+  const userId = await requireUserId();
+
+  const formData = new FormData();
+  formData.set("text", input.text);
+  formData.set("emoji", input.emoji ?? "");
+  formData.set("category", input.category);
+  formData.set("visibility", input.isPublic ? "public" : "private");
+  const parsed = parseWinInput(formData);
+  if ("error" in parsed) return { status: "invalid", message: parsed.error };
+
+  let win = parsed.data;
+  const blocked = await moderationError(win.text, win.isPublic);
+  if (blocked) win = { ...win, isPublic: false };
+
+  const result = await insertWin(userId, win);
+  if ("error" in result) return { status: "retry" };
+
+  refresh();
+  return blocked ? { status: "saved_private", message: blocked } : { status: "saved" };
 }
 
 export async function updateWin(_previous: WinFormState, formData: FormData): Promise<WinFormState> {

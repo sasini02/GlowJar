@@ -44,8 +44,8 @@ export function CelebrateControl({ winId, initial, hiddenUntilRevealed }: Celebr
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
-        className={`inline-flex min-h-11 items-center gap-1.5 rounded-pill px-4 text-label text-ink shadow-card transition-colors duration-200 ${
-          current ? "bg-glow" : "bg-surface-raised hover:bg-surface"
+        className={`inline-flex min-h-11 items-center gap-1.5 rounded-pill px-4 text-label shadow-card transition-colors duration-200 ${
+          current ? "bg-glow text-on-glow" : "bg-surface-raised text-ink hover:bg-surface"
         }`}
       >
         {current ? (

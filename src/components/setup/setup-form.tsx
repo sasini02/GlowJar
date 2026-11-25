@@ -4,14 +4,8 @@ import { useActionState, useState, useTransition } from "react";
 import { Shuffle } from "lucide-react";
 import { CheerupsSwitch } from "@/components/push/cheerups-switch";
 import { completeSetup, suggestUsername, type SetupState } from "@/lib/actions/profile";
+import { NUDGE_OPTIONS } from "@/lib/nudge";
 import type { Enums } from "@/lib/supabase/database.types";
-
-const NUDGE_OPTIONS: { value: Enums<"nudge_time">; label: string; hint: string }[] = [
-  { value: "morning", label: "Morning", hint: "Around 8:00" },
-  { value: "lunch", label: "Lunch break", hint: "Around 12:30" },
-  { value: "evening", label: "After dinner", hint: "Around 19:30" },
-  { value: "night", label: "Before bed", hint: "Around 21:30" },
-];
 
 const initialState: SetupState = { error: null };
 
@@ -105,7 +99,7 @@ export function SetupForm({ initialUsername, initialNudgeTime, initialCheerupsEn
       <button
         type="submit"
         disabled={saving}
-        className="inline-flex min-h-12 items-center justify-center rounded-md bg-glow px-6 text-label text-ink shadow-card transition-shadow duration-200 hover:shadow-lift disabled:opacity-70"
+        className="inline-flex min-h-12 items-center justify-center rounded-md bg-glow px-6 text-label text-on-glow shadow-card transition-shadow duration-200 hover:shadow-lift disabled:opacity-70"
       >
         {saving ? "Starting…" : "Start my jar"}
       </button>

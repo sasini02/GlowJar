@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useId, useState, type ReactNode } from "react";
+import { useActionState, useId, useState, type FormEvent, type ReactNode } from "react";
 import { Globe, Lock } from "lucide-react";
 import { createWin, updateWin, type WinFormState } from "@/lib/actions/wins";
+import { queueWin } from "@/lib/offline/queue";
 import { CATEGORIES, CATEGORY_ORDER, type WinCategory } from "@/lib/categories";
 import { EMOJI_CHOICES, WIN_IDEAS } from "@/lib/wins/ideas";
 import { charCount, MAX_WIN_LENGTH } from "@/lib/wins/validation";
@@ -16,7 +17,8 @@ export type ComposerValues = {
 };
 
 type WinComposerProps = {
-  username: string;
+  /** Null on the offline page, which can't look the name up. */
+  username: string | null;
   initial: ComposerValues;
   /** Present when editing an existing win. */
   winId?: string;
@@ -42,14 +44,29 @@ export function WinComposer({
   const [emoji, setEmoji] = useState(initial.emoji);
   const [category, setCategory] = useState(initial.category);
   const [isPublic, setIsPublic] = useState(initial.isPublic);
+  const [queued, setQueued] = useState<"idle" | "queued" | "failed">("idle");
   const ids = useId();
+
+  // Offline, a new win waits on the device instead of failing; OfflineQueueSync saves it later.
+  async function queueIfOffline(event: FormEvent<HTMLFormElement>) {
+    if (winId || navigator.onLine) return;
+    event.preventDefault();
+    try {
+      await queueWin({ text: text.trim(), emoji, category, isPublic });
+      setText("");
+      setEmoji(null);
+      setQueued("queued");
+    } catch {
+      setQueued("failed");
+    }
+  }
 
   const length = charCount(text);
   const remaining = MAX_WIN_LENGTH - length;
   const canSubmit = text.trim().length > 0 && remaining >= 0 && !saving;
 
   return (
-    <form action={formAction} className="flex flex-col gap-6">
+    <form action={formAction} onSubmit={queueIfOffline} className="flex flex-col gap-6">
       {winId && <input type="hidden" name="id" value={winId} />}
       {returnTo && <input type="hidden" name="returnTo" value={returnTo} />}
       <input type="hidden" name="emoji" value={emoji ?? ""} />
@@ -65,7 +82,10 @@ export function WinComposer({
           id={`${ids}-text`}
           name="text"
           value={text}
-          onChange={(event) => setText(event.target.value)}
+          onChange={(event) => {
+            setText(event.target.value);
+            setQueued("idle");
+          }}
           rows={4}
           autoFocus={autoFocus}
           placeholder="What went right today, however small?"
@@ -171,7 +191,7 @@ export function WinComposer({
             onSelect={() => setIsPublic(true)}
             icon={<Globe className="size-4" strokeWidth={1.75} aria-hidden="true" />}
             title="Public"
-            description={`Shared in the feed as ${username}. Your email is never shown.`}
+            description={`Shared in the feed as ${username ?? "your username"}. Your email is never shown.`}
           />
           <VisibilityOption
             name="visibility"
@@ -184,6 +204,19 @@ export function WinComposer({
           />
         </div>
       </fieldset>
+
+      {queued === "queued" && (
+        <p role="status" className="rounded-md bg-surface-raised px-4 py-3 text-label text-ink">
+          You&apos;re offline, so this one is saved on your device. It&apos;ll go into your jar as soon as you&apos;re back
+          online.
+        </p>
+      )}
+      {queued === "failed" && (
+        <p role="alert" className="text-label text-danger">
+          You&apos;re offline and this browser couldn&apos;t keep a copy. Your words are still here, so try again once
+          you&apos;re connected.
+        </p>
+      )}
 
       {state.error && (
         <p role="alert" className="text-label text-danger">
@@ -204,7 +237,7 @@ export function WinComposer({
         <button
           type="submit"
           disabled={!canSubmit}
-          className="inline-flex min-h-12 items-center justify-center rounded-md bg-glow px-6 text-label text-ink shadow-card transition-shadow duration-200 hover:shadow-lift disabled:opacity-60 disabled:shadow-none"
+          className="inline-flex min-h-12 items-center justify-center rounded-md bg-glow px-6 text-label text-on-glow shadow-card transition-shadow duration-200 hover:shadow-lift disabled:opacity-60 disabled:shadow-none"
         >
           {saving ? "Saving…" : winId ? "Save changes" : "Add to my jar"}
         </button>

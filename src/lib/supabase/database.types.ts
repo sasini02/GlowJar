@@ -124,6 +124,51 @@ export type Database = {
           },
         ]
       }
+      monthly_recaps: {
+        Row: {
+          by_category: Json
+          created_at: string
+          month: string
+          top_win_celebrations: number
+          top_win_id: string | null
+          total: number
+          user_id: string
+        }
+        Insert: {
+          by_category: Json
+          created_at?: string
+          month: string
+          top_win_celebrations?: number
+          top_win_id?: string | null
+          total: number
+          user_id: string
+        }
+        Update: {
+          by_category?: Json
+          created_at?: string
+          month?: string
+          top_win_celebrations?: number
+          top_win_id?: string | null
+          total?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_recaps_top_win_id_fkey"
+            columns: ["top_win_id"]
+            isOneToOne: false
+            referencedRelation: "wins"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monthly_recaps_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           cheerups_enabled: boolean
@@ -311,6 +356,7 @@ export type Database = {
           emoji: string | null
           id: string
           is_public: boolean
+          search: unknown
           text: string
           updated_at: string
           user_id: string
@@ -398,6 +444,24 @@ export type Database = {
           win_emoji: string | null
           win_id: string
           win_text: string
+        }[]
+      }
+      jar_shelf: {
+        Args: never
+        Returns: {
+          lights: number
+          month: string
+        }[]
+      }
+      on_this_day: {
+        Args: never
+        Returns: {
+          category: Database["public"]["Enums"]["win_category"]
+          created_at: string
+          emoji: string | null
+          months_ago: number
+          text: string
+          win_id: string
         }[]
       }
     }

@@ -1,7 +1,8 @@
 import type { NextRequest } from "next/server";
 import { redirectWithCookies, updateSession } from "@/lib/supabase/proxy";
 
-const PUBLIC_PATHS = ["/", "/auth"];
+// /offline is served by the service worker without a session, so it must never redirect.
+const PUBLIC_PATHS = ["/", "/auth", "/offline"];
 
 function isPublic(pathname: string) {
   return PUBLIC_PATHS.some((path) => pathname === path || (path !== "/" && pathname.startsWith(`${path}/`)));

@@ -89,7 +89,7 @@ export function InstallPrompt() {
             <button
               type="button"
               onClick={install}
-              className="mt-3 inline-flex min-h-11 items-center rounded-md bg-glow px-4 text-label text-ink"
+              className="mt-3 inline-flex min-h-11 items-center rounded-md bg-glow px-4 text-label text-on-glow"
             >
               Add to home screen
             </button>

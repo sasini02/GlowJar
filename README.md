@@ -29,7 +29,7 @@ Use a separate Supabase project for development. Production gets its own project
    npm run db:push:seed
    ```
 
-4. Copy `.env.example` to `.env.local`. Fill in `NEXT_PUBLIC_SUPABASE_URL` (**Project Settings → Data API**) and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (**Project Settings → API Keys**).
+4. Copy `.env.example` to `.env.local`. Fill in `NEXT_PUBLIC_SUPABASE_URL` (**Project Settings → Data API**), `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and `SUPABASE_SECRET_KEY` (both under **Project Settings → API Keys**). The secret key is only used on the server, to delete accounts.
 5. In **Authentication → URL Configuration**, set **Site URL** to `http://localhost:3000` and add `http://localhost:3000/auth/callback` under **Redirect URLs**.
 6. Run `npm run dev` and open http://localhost:3000.
 
@@ -65,9 +65,13 @@ src/lib/supabase/       Browser, server and proxy Supabase clients, plus databas
 src/lib/actions/        Server Actions (sign-in, set-up, wins, celebrations, letters, push, reports)
 src/lib/wins/           Win queries, validation and composer ideas
 src/lib/letters/        Letter queries (bodies only ever come from open_letter())
+src/lib/jar/            Shelf, On this day and monthly recap queries
+src/lib/offline/queue.ts  IndexedDB queue for wins written offline (browser only)
+src/lib/theme.ts        Day / Night / Auto: the pre-paint boot script and applyTheme()
+src/lib/supabase/admin.ts  Secret-key client, used only to delete accounts
 src/lib/push/client.ts  Service worker registration and Web Push subscribe/unsubscribe (browser only)
 src/lib/moderation.ts   Calls the moderate-win Edge Function, with a local fallback
-public/sw.js            Service worker: install support and cheer-up notifications
+public/sw.js            Service worker: install support, the offline page and cheer-up notifications
 src/lib/auth.ts         getUserId / getProfile / requireOnboardedProfile for pages and actions
 src/proxy.ts            Refreshes the Supabase session on each request and sends signed-out visitors to the welcome page (Next 16's name for middleware)
 supabase/migrations/    Schema, RLS, letter encryption, cheer-up scheduling, safety rules and cron jobs
@@ -97,11 +101,16 @@ Themes: Day is the default. `data-theme="night"` on `<html>` forces Night, `data
 - Celebrations are set with an update-then-insert rather than an upsert, because users may only update the `type` column.
 - **Cheer-ups:** turning them on books `profiles.next_cheerup_at`, a random moment 1 to 7 days away outside the user's quiet hours in their timezone. After each run the next slot is 4 to 10 days later. `claim_due_cheerups()` picks a win older than 14 days that isn't in `reminder_log` for the last 6 months, logs it and books the next slot in one transaction. Someone with no wins at all gets a "write your first win" nudge at most every 4 weeks. Someone whose wins are all too new or recently sent is skipped that week.
 - **Letter delivery:** `claim_due_letters()` returns due letters with the decrypted body and the author's email. It is callable only by the service role.
+- **My jar:** `wins.search` is a generated `tsvector` (English stemming) with a GIN index, so search runs in Postgres. `jar_shelf()` counts past months in the user's timezone and leaves the current month in the jar.
+- **On this day:** `on_this_day()` returns one of the user's own wins from 6 months or a whole number of years ago (up to 5), within three days of the date, closest first, so the card doesn't change between refreshes.
+- **Monthly recaps:** `monthly_recaps` holds one snapshot per user and month (total, lights per category, most-celebrated win). `private.build_due_recaps()` runs hourly and builds last month's recap once the 1st has arrived in each user's timezone. Months without wins get no recap. The migration backfilled every finished month that already had wins.
+- **Realtime:** `celebrations` is in the `supabase_realtime` publication. Realtime applies RLS per subscriber, so authors only receive reactions on their own wins. The toast never says who celebrated.
+- **Account deletion:** deleting the auth user cascades to every table. The settings screen asks the user to type their name first.
 - **Safety:** at most 20 wins per person per 24 hours (trigger, SQLSTATE `GJ429`). Public wins pass through `moderate-win` before saving. Private wins are never moderated. Three open reports hide a win from the feed. Moderators (`profiles.is_moderator`) review reports at `/moderation`, and "remove" makes the win private rather than deleting it.
 
 ## Background jobs and Edge Functions
 
-`pg_cron` runs `send-cheerups` and `deliver-letters` every hour through `private.invoke_edge_function()`, which reads two Vault secrets. Letters run hourly rather than daily because each author's "today" depends on their timezone. One-time setup per Supabase project:
+`pg_cron` runs `send-cheerups` and `deliver-letters` every hour through `private.invoke_edge_function()`, which reads two Vault secrets. A third hourly job, `build-recaps`, is plain SQL and needs no setup. Letters run hourly rather than daily because each author's "today" depends on their timezone. One-time setup per Supabase project:
 
 1. Generate VAPID keys with `npx web-push generate-vapid-keys`. Put the public key in `NEXT_PUBLIC_VAPID_PUBLIC_KEY` and the private key in `VAPID_PRIVATE_KEY` in `.env.local`, and set `VAPID_SUBJECT` (e.g. `mailto:you@example.com`).
 2. Make a long random cron secret, for example with `openssl rand -base64 32`.
@@ -113,6 +122,12 @@ Themes: Day is the default. `data-theme="night"` on `<html>` forces Night, `data
 6. In Resend, verify the domain used in `RESEND_FROM_EMAIL` (**Domains → Add domain**, then add the DNS records it shows).
 
 To check the jobs, look at **Integrations → Cron → Jobs** in the dashboard (run history), and **Edge Functions → \<name\> → Logs**.
+
+## Offline writing and themes
+
+The service worker caches only `/offline` and the content-hashed files in `/_next/static`. App pages are never cached, because they contain private data. When a page can't load, the worker serves `/offline`, where people can still write a win. Offline, the composer saves new wins to IndexedDB instead of posting them. `OfflineQueueSync` (in the app layout) sends them through `saveQueuedWin()` when the device is back online. If a queued public win fails moderation, it's saved as Just me and the writer is told why, because nobody is looking at the form any more.
+
+The theme lives in `profiles.theme` and in `localStorage`. A small script in `<head>` applies the stored choice before the first paint, and `ThemeSync` copies the profile's value to a new device. Text on `glow` uses `text-on-glow`, which stays dark in both themes.
 
 Push needs a production build: the service worker registers only when `NODE_ENV` is `production` (`npm run build && npm start`). On iPhone, push works only after Glowjar is added to the home screen.
 

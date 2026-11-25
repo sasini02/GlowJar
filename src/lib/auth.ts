@@ -15,6 +15,9 @@ export type Profile = Pick<
   | "cheerups_enabled"
   | "onboarded_at"
   | "is_moderator"
+  | "theme"
+  | "quiet_start"
+  | "quiet_end"
 >;
 
 /** The signed-in user's id, or null. Cached for the length of one request. */
@@ -39,7 +42,9 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("profiles")
-    .select("user_id, username, timezone, default_visibility, nudge_time, cheerups_enabled, onboarded_at, is_moderator")
+    .select(
+      "user_id, username, timezone, default_visibility, nudge_time, cheerups_enabled, onboarded_at, is_moderator, theme, quiet_start, quiet_end",
+    )
     .eq("user_id", userId)
     .maybeSingle();
   return data;

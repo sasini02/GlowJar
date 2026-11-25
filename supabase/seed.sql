@@ -39,13 +39,13 @@ from auth.users u
 where u.email like '%@example.com';
 
 -- Profiles are created by the signup trigger with random names; pin them so the seed is predictable.
-update public.profiles set username = 'Quiet Otter', timezone = 'Europe/London', default_visibility = 'public', cheerups_enabled = true
+update public.profiles set username = 'Quiet Otter', onboarded_at = now(), timezone = 'Europe/London', default_visibility = 'public', cheerups_enabled = true
   where user_id = '10000000-0000-4000-8000-000000000001';
-update public.profiles set username = 'Gentle Fern', timezone = 'America/New_York', default_visibility = 'public'
+update public.profiles set username = 'Gentle Fern', onboarded_at = now(), timezone = 'America/New_York', default_visibility = 'public'
   where user_id = '10000000-0000-4000-8000-000000000002';
-update public.profiles set username = 'Brave Sparrow', timezone = 'Asia/Tokyo'
+update public.profiles set username = 'Brave Sparrow', onboarded_at = now(), timezone = 'Asia/Tokyo'
   where user_id = '10000000-0000-4000-8000-000000000003';
-update public.profiles set username = 'Steady Heron', is_moderator = true
+update public.profiles set username = 'Steady Heron', onboarded_at = now(), is_moderator = true
   where user_id = '10000000-0000-4000-8000-000000000004';
 
 insert into public.wins (id, user_id, text, emoji, category, is_public, created_at) values

@@ -131,6 +131,7 @@ export type Database = {
           default_visibility: Database["public"]["Enums"]["visibility"]
           is_moderator: boolean
           nudge_time: Database["public"]["Enums"]["nudge_time"]
+          onboarded_at: string | null
           quiet_end: string
           quiet_start: string
           theme: Database["public"]["Enums"]["theme_preference"]
@@ -144,6 +145,7 @@ export type Database = {
           default_visibility?: Database["public"]["Enums"]["visibility"]
           is_moderator?: boolean
           nudge_time?: Database["public"]["Enums"]["nudge_time"]
+          onboarded_at?: string | null
           quiet_end?: string
           quiet_start?: string
           theme?: Database["public"]["Enums"]["theme_preference"]
@@ -157,6 +159,7 @@ export type Database = {
           default_visibility?: Database["public"]["Enums"]["visibility"]
           is_moderator?: boolean
           nudge_time?: Database["public"]["Enums"]["nudge_time"]
+          onboarded_at?: string | null
           quiet_end?: string
           quiet_start?: string
           theme?: Database["public"]["Enums"]["theme_preference"]
@@ -372,6 +375,7 @@ export type Database = {
         Args: { body: string; deliver_on: string }
         Returns: string
       }
+      suggest_username: { Args: never; Returns: string }
     }
     Enums: {
       celebration_type: "celebrate" | "proud" | "metoo"

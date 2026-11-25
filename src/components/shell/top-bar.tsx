@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell, CircleUserRound, Moon } from "lucide-react";
@@ -7,30 +8,14 @@ import { Logo } from "@/components/brand/logo";
 import { desktopNav, ICON_STROKE, isActive } from "./nav-items";
 
 export function TopBar() {
-  const pathname = usePathname();
-
   return (
     <header className="sticky top-0 z-30 hidden border-b border-line bg-surface/90 backdrop-blur md:block">
       <div className="mx-auto flex h-18 max-w-[1440px] items-center gap-8 px-8">
         <Logo />
 
-        <nav aria-label="Main" className="flex items-center gap-1">
-          {desktopNav.map((item) => {
-            const active = isActive(pathname, item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={active ? "page" : undefined}
-                className={`inline-flex min-h-11 items-center rounded-pill px-4 text-label transition-colors duration-200 ${
-                  active ? "bg-ink text-surface" : "text-ink-muted hover:text-ink"
-                }`}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
+        <Suspense fallback={<DesktopNavLinks pathname={null} />}>
+          <DesktopNav />
+        </Suspense>
 
         <div className="ml-auto flex items-center gap-2">
           <Link
@@ -57,5 +42,33 @@ export function TopBar() {
         </div>
       </div>
     </header>
+  );
+}
+
+function DesktopNav() {
+  const pathname = usePathname();
+  return <DesktopNavLinks pathname={pathname} />;
+}
+
+/** Rendered without a pathname while the URL is still unknown during prerendering. */
+function DesktopNavLinks({ pathname }: { pathname: string | null }) {
+  return (
+    <nav aria-label="Main" className="flex items-center gap-1">
+      {desktopNav.map((item) => {
+        const active = pathname !== null && isActive(pathname, item.href);
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            aria-current={active ? "page" : undefined}
+            className={`inline-flex min-h-11 items-center rounded-pill px-4 text-label transition-colors duration-200 ${
+              active ? "bg-ink text-surface" : "text-ink-muted hover:text-ink"
+            }`}
+          >
+            {item.label}
+          </Link>
+        );
+      })}
+    </nav>
   );
 }

@@ -30,6 +30,42 @@
   }
 }
 
+/* A freshly added win: a soft honey halo and a few dots that drift out and fade. */
+.win-glow {
+  background: radial-gradient(closest-side, var(--color-glow-soft), transparent);
+  animation: win-glow-in 300ms ease-out both;
+}
+
+.confetti-dot {
+  opacity: 0;
+  animation: confetti-drift 900ms ease-out both;
+}
+
+@keyframes win-glow-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+}
+
+@keyframes confetti-drift {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) translateY(6px);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1) translateY(-14px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -57,7 +57,10 @@ scripts/build-tokens.mjs  Turns tokens.json into CSS variables and Tailwind them
 src/app/                Routes. (app)/ holds screens with the app shell; hard-day/ is full screen
 src/components/shell/   Desktop top bar and mobile bottom tab bar
 src/lib/supabase/       Browser, server and proxy Supabase clients, plus database types
-src/proxy.ts            Refreshes the Supabase session on each request (Next 16's name for middleware)
+src/lib/actions/        Server Actions (sign-in, set-up, wins, celebrations)
+src/lib/wins/           Win queries, validation and composer ideas
+src/lib/auth.ts         getUserId / getProfile / requireOnboardedProfile for pages and actions
+src/proxy.ts            Refreshes the Supabase session on each request and sends signed-out visitors to the welcome page (Next 16's name for middleware)
 supabase/migrations/    Schema, RLS policies and letter encryption
 supabase/seed.sql       Local development data
 supabase/tests/         pgTAP tests for RLS and the letter unlock rule
@@ -79,6 +82,8 @@ Themes: Day is the default. `data-theme="night"` on `<html>` forces Night, `data
 - `profiles.timezone` must be a real IANA name (enforced by a trigger). "Today" for letters is the user's local date.
 - Letter bodies are encrypted with `pgp_sym_encrypt` using a key stored in Supabase Vault under the name `letters_encryption_key`. Write letters with `seal_letter(body, deliver_on)`. Read them with `open_letter(letter_id)`, which refuses until `deliver_on` has arrived in the author's own timezone. The encrypted column can't be selected through the API.
 - `reminder_log` is service-role only.
+- `profiles.onboarded_at` is null until the user finishes the set-up screen; app pages send them to `/setup` until then. `suggest_username()` powers the set-up screen's Shuffle button.
+- Celebrations are set with an update-then-insert rather than an upsert, because users may only update the `type` column.
 
 ## Setting up production
 

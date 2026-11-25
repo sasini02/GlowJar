@@ -71,7 +71,10 @@ async function Jar({ searchParams }: Pick<PageProps<"/jar">, "searchParams">) {
           aria-label={`Your ${thisMonth} jar`}
           className="flex items-center gap-6 rounded-lg bg-dusk p-7 text-on-dusk shadow-card"
         >
-          <JarIllustration lights={monthCount} className="h-48 w-auto shrink-0" />
+          <div className="relative shrink-0">
+            <div aria-hidden="true" className="jar-halo absolute -inset-4 rounded-pill" />
+            <JarIllustration lights={monthCount} className="relative h-48 w-auto" />
+          </div>
           <div>
             <p className="text-label opacity-80">{thisMonth}</p>
             <p className="mt-1 font-serif text-title">
@@ -122,8 +125,8 @@ async function Jar({ searchParams }: Pick<PageProps<"/jar">, "searchParams">) {
           <EmptyWins hasAny={altogether > 0} search={search} />
         ) : (
           <div className="columns-2 gap-6 md:columns-3 lg:columns-4 min-[1400px]:columns-5">
-            {wins.map((win) => (
-              <WinCard key={win.id} win={win} returnTo="/jar" className="mb-6" />
+            {wins.map((win, index) => (
+              <WinCard key={win.id} win={win} returnTo="/jar" className="mb-6" index={index} />
             ))}
           </div>
         )}

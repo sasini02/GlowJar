@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -41,7 +42,9 @@ async function RecapContent({ params }: Pick<PageProps<"/jar/recap/[month]">, "p
       <header className="rounded-lg bg-dusk p-8 text-on-dusk shadow-card">
         <p className="text-label opacity-80">Monthly recap</p>
         <h1 className="mt-1 font-serif text-display">{title}</h1>
-        <p className="mt-6 font-serif text-[64px] leading-none text-glow">{recap.total}</p>
+        <p className="rise-in mt-6 font-serif text-[64px] leading-none text-glow" style={{ "--rise-delay": "100ms" } as CSSProperties}>
+          {recap.total}
+        </p>
         <p className="mt-2">
           {recap.total === 1 ? "light in your jar. That one counts." : "little lights in your jar. Every one of them counts."}
         </p>
@@ -52,13 +55,18 @@ async function RecapContent({ params }: Pick<PageProps<"/jar/recap/[month]">, "p
           Where your lights came from
         </h2>
         <ul className="mt-4 flex flex-col gap-3">
-          {recap.byCategory.map(({ category, lights }) => (
+          {recap.byCategory.map(({ category, lights }, index) => (
             <li key={category} className="grid grid-cols-[6rem_minmax(0,1fr)_2rem] items-center gap-3 text-label">
               <span className="text-ink">{CATEGORIES[category].label}</span>
               <span className="h-4 overflow-hidden rounded-pill bg-surface-raised">
                 <span
-                  className={`block h-full rounded-pill ${CATEGORIES[category].tint} ring-1 ring-line ring-inset`}
-                  style={{ width: `${Math.max(8, (lights / most) * 100)}%` }}
+                  className={`bar-grow block h-full rounded-pill ${CATEGORIES[category].tint} ring-1 ring-line ring-inset`}
+                  style={
+                    {
+                      width: `${Math.max(8, (lights / most) * 100)}%`,
+                      "--rise-delay": `${150 + index * 80}ms`,
+                    } as CSSProperties
+                  }
                 />
               </span>
               <span className="text-right text-ink-muted">{lights}</span>

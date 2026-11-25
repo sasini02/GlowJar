@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type MouseEvent } from "react";
+import { useState, type CSSProperties, type MouseEvent } from "react";
 import { Lock } from "lucide-react";
 import { CELEBRATION_ORDER, CELEBRATIONS } from "@/lib/celebrations";
 import type { WinView } from "@/lib/wins/queries";
@@ -8,6 +8,10 @@ import { AuthorLine, WinTile } from "./win-tile";
 import { CelebrateControl } from "./celebrate-control";
 import { OwnWinMenu } from "./own-win-menu";
 import { ReportMenu } from "./report-menu";
+
+// Cards past this point arrive together, so a long list never makes anyone wait.
+const MAX_STAGGERED = 12;
+const STAGGER_MS = 45;
 
 // Hover on desktop, keyboard focus, or a tap on touch screens (data-revealed) shows the controls.
 const HIDDEN_UNTIL_REVEALED =
@@ -18,9 +22,11 @@ type WinCardProps = {
   /** Where the edit screen sends the author back to. */
   returnTo: string;
   className?: string;
+  /** Position in a list. When set, the card fades in a moment after the one before it. */
+  index?: number;
 };
 
-export function WinCard({ win, returnTo, className = "" }: WinCardProps) {
+export function WinCard({ win, returnTo, className = "", index }: WinCardProps) {
   const [revealed, setRevealed] = useState(false);
   const [reported, setReported] = useState(false);
 
@@ -47,9 +53,24 @@ export function WinCard({ win, returnTo, className = "" }: WinCardProps) {
   ) : null;
 
   return (
-    <article className={`group break-inside-avoid ${className}`} data-revealed={revealed || undefined}>
+    <article
+      className={`group break-inside-avoid ${index === undefined ? "" : "rise-in"} ${className}`}
+      style={
+        index === undefined
+          ? undefined
+          : ({ "--rise-delay": `${Math.min(index, MAX_STAGGERED) * STAGGER_MS}ms` } as CSSProperties)
+      }
+      data-revealed={revealed || undefined}
+    >
       <div onClick={toggleReveal}>
-        <WinTile text={win.text} emoji={win.emoji} category={win.category} actions={actions} />
+        {/* Shadow only, no movement: a transform here would trap the celebrate menu under the next card. */}
+        <WinTile
+          text={win.text}
+          emoji={win.emoji}
+          category={win.category}
+          actions={actions}
+          className="transition-shadow duration-300 group-hover:shadow-lift"
+        />
       </div>
       <AuthorLine username={win.username} category={win.category}>
         {win.isOwn && !win.isPublic && (

@@ -9,7 +9,10 @@ export function JarCard({ monthCount }: { monthCount: number }) {
       href="/jar"
       className="group mb-6 block break-inside-avoid rounded-lg bg-dusk p-7 text-on-dusk shadow-card transition-shadow duration-200 hover:shadow-lift"
     >
-      <JarMark className="size-10 text-glow" />
+      <span className="relative inline-flex">
+        <span aria-hidden="true" className="jar-halo absolute -inset-3 rounded-pill" />
+        <JarMark className="relative size-10 text-glow" />
+      </span>
       <p className="mt-4 text-label opacity-80">Your jar</p>
       <p className="mt-1 font-serif text-title">
         {monthCount === 0 ? "Ready for its first light this month" : `${monthCount} ${lights} this month`}

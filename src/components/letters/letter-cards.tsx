@@ -14,7 +14,7 @@ export function SealedEnvelope({ letter, today }: { letter: LetterSummary; today
       {/* The envelope flap. */}
       <span
         aria-hidden="true"
-        className="absolute inset-x-0 top-0 h-16 bg-on-dusk/10 [clip-path:polygon(0_0,100%_0,50%_100%)]"
+        className="absolute inset-x-0 top-0 h-16 bg-on-dusk/10 transition-transform duration-300 ease-out [clip-path:polygon(0_0,100%_0,50%_100%)] motion-safe:group-hover:-translate-y-1.5"
       />
       <span
         aria-hidden="true"

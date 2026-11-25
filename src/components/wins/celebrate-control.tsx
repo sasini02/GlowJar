@@ -1,9 +1,17 @@
 "use client";
 
-import { useCallback, useRef, useState, useTransition } from "react";
+import { useCallback, useRef, useState, useTransition, type CSSProperties } from "react";
 import { setCelebration } from "@/lib/actions/celebrations";
 import { CELEBRATION_ORDER, CELEBRATIONS, type CelebrationType } from "@/lib/celebrations";
 import { useDismiss } from "@/components/ui/use-dismiss";
+
+// Where each coral spark drifts to, relative to the button's centre.
+const SPARKS = [
+  { x: "-26px", y: "-18px", delay: "0ms" },
+  { x: "24px", y: "-20px", delay: "40ms" },
+  { x: "-20px", y: "16px", delay: "80ms" },
+  { x: "28px", y: "14px", delay: "20ms" },
+];
 
 type CelebrateControlProps = {
   winId: string;
@@ -16,6 +24,8 @@ export function CelebrateControl({ winId, initial, hiddenUntilRevealed }: Celebr
   const [current, setCurrent] = useState(initial);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Bumped on each new celebration; used as a key so the pop and sparks replay.
+  const [burst, setBurst] = useState(0);
   const [, startTransition] = useTransition();
   const containerRef = useRef<HTMLDivElement>(null);
   const close = useCallback(() => setOpen(false), []);
@@ -24,6 +34,7 @@ export function CelebrateControl({ winId, initial, hiddenUntilRevealed }: Celebr
   function choose(type: CelebrationType | null) {
     const previous = current;
     setCurrent(type);
+    if (type && type !== previous) setBurst((count) => count + 1);
     setOpen(false);
     setError(null);
     startTransition(async () => {
@@ -49,13 +60,27 @@ export function CelebrateControl({ winId, initial, hiddenUntilRevealed }: Celebr
         }`}
       >
         {current ? (
-          <>
+          <span key={burst} className={`inline-flex items-center gap-1.5 ${burst ? "celebrate-pop" : ""}`}>
             <span aria-hidden="true">{CELEBRATIONS[current].emoji}</span> Celebrated
-          </>
+          </span>
         ) : (
           "Celebrate"
         )}
       </button>
+
+      {burst > 0 && current && (
+        <span key={burst} aria-hidden="true" className="pointer-events-none absolute inset-0">
+          {SPARKS.map((spark, index) => (
+            <span
+              key={index}
+              className="celebrate-spark"
+              style={
+                { "--spark-x": spark.x, "--spark-y": spark.y, animationDelay: spark.delay } as CSSProperties
+              }
+            />
+          ))}
+        </span>
+      )}
 
       {open && (
         <div

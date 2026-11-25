@@ -69,7 +69,7 @@ async function Feed({ searchParams }: Pick<PageProps<"/feed">, "searchParams">) 
             <Fragment key={win.id}>
               {index === JAR_CARD_POSITION && <JarCard monthCount={monthCount} />}
               {index === ON_THIS_DAY_POSITION && onThisDayCard}
-              <WinCard win={win} returnTo={returnTo} className="mb-6" />
+              <WinCard win={win} returnTo={returnTo} className="mb-6" index={index} />
             </Fragment>
           ))}
           {wins.length <= JAR_CARD_POSITION && <JarCard monthCount={monthCount} />}

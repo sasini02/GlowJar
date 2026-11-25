@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 const MAX_DRAWN_LIGHTS = 48;
 const PER_ROW = 6;
 
@@ -42,7 +44,22 @@ export function JarIllustration({ lights, className = "" }: { lights: number; cl
       <g filter="url(#jar-light-glow)">
         {Array.from({ length: drawn }, (_, index) => {
           const { cx, cy, r } = lightPosition(index);
-          return <circle key={index} cx={cx} cy={cy} r={r} className="fill-glow" />;
+          return (
+            <circle
+              key={index}
+              cx={cx}
+              cy={cy}
+              r={r}
+              className="jar-light fill-glow"
+              // Different lengths and negative delays keep the lights out of step from the first frame.
+              style={
+                {
+                  "--twinkle-duration": `${4 + (index % 5) * 0.9}s`,
+                  "--twinkle-delay": `${-(index * 0.7) % 5}s`,
+                } as CSSProperties
+              }
+            />
+          );
         })}
       </g>
     </svg>

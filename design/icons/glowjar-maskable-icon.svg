@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="halo" cx="50%" cy="56%" r="50%">
+      <stop offset="0" stop-color="#F2B544" stop-opacity=".28"/>
+      <stop offset="1" stop-color="#F2B544" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="night" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5367AC"/>
+      <stop offset="1" stop-color="#2B3563"/>
+    </linearGradient>
+    <radialGradient id="moonglow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#F7D48C" stop-opacity=".45"/><stop offset="1" stop-color="#F7D48C" stop-opacity="0"/></radialGradient>
+    <clipPath id="jar">
+      <path d="M200 156H312V176C312 192 372 200 372 250V384C372 416 348 436 316 436H196C164 436 140 416 140 384V250C140 200 200 192 200 176Z"/>
+    </clipPath>
+    <mask id="crescent">
+      <rect width="512" height="512" fill="#000"/>
+      <circle cx="236" cy="306" r="66" fill="#fff"/>
+      <circle cx="268" cy="284" r="58" fill="#000"/>
+    </mask>
+  </defs>
+  <rect width="512" height="512" fill="#232B4D"/>
+  <g transform="translate(256 256) scale(.8) translate(-256 -256)">
+  <circle cx="256" cy="290" r="230" fill="url(#halo)"/>
+
+  <g clip-path="url(#jar)">
+    <rect x="130" y="150" width="252" height="300" fill="url(#night)"/>
+    <circle cx="236" cy="306" r="110" fill="url(#moonglow)"/>
+    <rect width="512" height="512" fill="#F7D48C" mask="url(#crescent)"/>
+    <circle cx="160" cy="430" r="44" fill="#4A5BA0"/>
+    <circle cx="230" cy="440" r="50" fill="#4A5BA0"/>
+    <circle cx="310" cy="426" r="48" fill="#4A5BA0"/>
+    <circle cx="370" cy="418" r="40" fill="#4A5BA0"/>
+    <circle cx="190" cy="456" r="40" fill="#6577BE"/>
+    <circle cx="270" cy="462" r="44" fill="#6577BE"/>
+    <circle cx="350" cy="456" r="38" fill="#6577BE"/>
+    <rect x="160" y="252" width="12" height="96" rx="6" fill="#FFFFFF" opacity=".28"/>
+    <rect x="160" y="360" width="12" height="16" rx="6" fill="#FFFFFF" opacity=".28"/>
+  </g>
+  <path d="M200 156H312V176C312 192 372 200 372 250V384C372 416 348 436 316 436H196C164 436 140 416 140 384V250C140 200 200 192 200 176Z" fill="none" stroke="#C9D2F2" stroke-width="10" stroke-linejoin="round"/>
+
+  <path d="M318 214l5 13 13 5-13 5-5 13-5-13-13-5 13-5z" fill="#FFF4D6"/>
+  <path d="M322 318l3.5 9 9 3.5-9 3.5-3.5 9-3.5-9-9-3.5 9-3.5z" fill="#FFF4D6"/>
+  <path d="M204 222l3 7 7 3-7 3-3 7-3-7-7-3 7-3z" fill="#FFF4D6"/>
+  <circle cx="290" cy="260" r="3.5" fill="#FFF4D6"/>
+  <circle cx="340" cy="276" r="2.5" fill="#FFF4D6"/>
+  <circle cx="300" cy="370" r="3" fill="#FFF4D6"/>
+
+  <rect x="186" y="132" width="140" height="26" rx="12" fill="#8E9FDB"/>
+  <rect x="196" y="84" width="120" height="54" rx="16" fill="#C9925B"/>
+  <rect x="196" y="84" width="120" height="16" rx="8" fill="#DDAA72"/>
+  <circle cx="228" cy="114" r="3" fill="#A8743F"/>
+  <circle cx="262" cy="122" r="3" fill="#A8743F"/>
+  <circle cx="290" cy="110" r="3" fill="#A8743F"/>
+
+  <path d="M204 174C236 182 276 182 308 174" fill="none" stroke="#B07A45" stroke-width="7" stroke-linecap="round"/>
+  <path d="M306 176C320 160 344 162 338 178C334 190 316 186 306 176Z" fill="none" stroke="#B07A45" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M306 176C316 192 322 206 330 216" fill="none" stroke="#B07A45" stroke-width="6" stroke-linecap="round"/>
+</g>
+</svg>

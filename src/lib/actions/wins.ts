@@ -3,6 +3,7 @@
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUserId } from "@/lib/auth";
+import { checkPublicWin } from "@/lib/moderation";
 import { createClient } from "@/lib/supabase/server";
 import { parseWinInput } from "@/lib/wins/validation";
 
@@ -10,12 +11,25 @@ export type WinFormState = { error: string | null };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+// SQLSTATE raised by the wins_rate_limit trigger; its message is written for people.
+const RATE_LIMITED = "GJ429";
+
+/** Private wins are never moderated: it's someone's own diary. Public ones are checked first. */
+async function moderationError(text: string, isPublic: boolean): Promise<string | null> {
+  if (!isPublic) return null;
+  const result = await checkPublicWin(text);
+  return result.allowed ? null : (result.message ?? "This one can't be shared publicly, but you can keep it just for you.");
+}
+
 export async function createWin(_previous: WinFormState, formData: FormData): Promise<WinFormState> {
   const userId = await requireUserId();
   const parsed = parseWinInput(formData);
   if ("error" in parsed) return { error: parsed.error };
 
   const { text, emoji, category, isPublic } = parsed.data;
+  const blocked = await moderationError(text, isPublic);
+  if (blocked) return { error: blocked };
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("wins")
@@ -24,6 +38,7 @@ export async function createWin(_previous: WinFormState, formData: FormData): Pr
     .single();
 
   if (error) {
+    if (error.code === RATE_LIMITED) return { error: error.message };
     console.error("createWin failed", error.code, error.message);
     return { error: "We couldn't save your win just now. Your words are still here, so try again in a moment." };
   }
@@ -40,6 +55,9 @@ export async function updateWin(_previous: WinFormState, formData: FormData): Pr
   if ("error" in parsed) return { error: parsed.error };
 
   const { text, emoji, category, isPublic } = parsed.data;
+  const blocked = await moderationError(text, isPublic);
+  if (blocked) return { error: blocked };
+
   const supabase = await createClient();
   // RLS limits updates to the author's own rows, so a missing row means "not yours" or "gone".
   const { data, error } = await supabase

@@ -2,6 +2,7 @@
 
 import { useActionState, useState, useTransition } from "react";
 import { Shuffle } from "lucide-react";
+import { CheerupsSwitch } from "@/components/push/cheerups-switch";
 import { completeSetup, suggestUsername, type SetupState } from "@/lib/actions/profile";
 import type { Enums } from "@/lib/supabase/database.types";
 
@@ -17,38 +18,19 @@ const initialState: SetupState = { error: null };
 type SetupFormProps = {
   initialUsername: string;
   initialNudgeTime: Enums<"nudge_time">;
+  initialCheerupsEnabled: boolean;
 };
 
-export function SetupForm({ initialUsername, initialNudgeTime }: SetupFormProps) {
+export function SetupForm({ initialUsername, initialNudgeTime, initialCheerupsEnabled }: SetupFormProps) {
   const [state, formAction, saving] = useActionState(completeSetup, initialState);
   const [username, setUsername] = useState(initialUsername);
   const [shuffling, startShuffle] = useTransition();
-  const [cheerups, setCheerups] = useState(false);
-  const [notificationNote, setNotificationNote] = useState<string | null>(null);
 
   function shuffle() {
     startShuffle(async () => {
       const suggestion = await suggestUsername();
       if (suggestion) setUsername(suggestion);
     });
-  }
-
-  async function toggleCheerups(next: boolean) {
-    setNotificationNote(null);
-    if (!next) {
-      setCheerups(false);
-      return;
-    }
-    if (!("Notification" in window)) {
-      setNotificationNote("This browser can't show notifications. You can still turn cheer-ups on later from your phone.");
-      return;
-    }
-    const permission = await Notification.requestPermission();
-    if (permission === "granted") {
-      setCheerups(true);
-    } else {
-      setNotificationNote("Notifications are off for Glowjar. You can allow them in your browser settings any time.");
-    }
   }
 
   function submit(formData: FormData) {
@@ -111,35 +93,7 @@ export function SetupForm({ initialUsername, initialNudgeTime }: SetupFormProps)
       </fieldset>
 
       <section>
-        <div className="flex items-start justify-between gap-4 rounded-md border border-line bg-surface-raised p-4">
-          <div>
-            <p id="cheerups-label" className="text-label text-ink">
-              Weekly cheer-ups
-            </p>
-            <p id="cheerups-hint" className="mt-1 text-caption text-ink-muted">
-              Once a week we send back one of your own past wins, at a quiet, random moment.
-            </p>
-          </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={cheerups}
-            aria-labelledby="cheerups-label"
-            aria-describedby="cheerups-hint"
-            onClick={() => toggleCheerups(!cheerups)}
-            className={`relative inline-flex h-8 w-13 shrink-0 items-center rounded-pill transition-colors duration-200 ${
-              cheerups ? "bg-dusk" : "bg-line"
-            }`}
-          >
-            <span
-              className={`inline-block size-6 rounded-pill bg-surface-raised shadow-card transition-transform duration-200 ${
-                cheerups ? "translate-x-6" : "translate-x-1"
-              }`}
-            />
-          </button>
-        </div>
-        {cheerups && <input type="hidden" name="cheerups_enabled" value="on" />}
-        {notificationNote && <p className="mt-2 text-caption text-ink-muted">{notificationNote}</p>}
+        <CheerupsSwitch initialEnabled={initialCheerupsEnabled} />
       </section>
 
       {state.error && (

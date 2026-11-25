@@ -11,8 +11,10 @@
     "tokens": "node scripts/build-tokens.mjs",
     "db:push": "supabase db push --remote",
     "db:push:seed": "supabase db push --remote --include-seed",
-    "db:test": "supabase test db --remote",
-    "db:types": "supabase gen types --lang=typescript --remote > src/lib/supabase/database.types.ts"
+    "db:test": "node scripts/db-test.mjs",
+    "db:test:docker": "supabase test db --remote",
+    "db:types": "supabase gen types --lang=typescript --remote > src/lib/supabase/database.types.ts",
+    "icons": "node scripts/build-icons.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -30,6 +32,8 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
+    "pg": "^8.23.1",
+    "sharp": "^0.35.5",
     "supabase": "^3.3.0",
     "tailwindcss": "4.3.3",
     "typescript": "^5"

@@ -400,6 +400,18 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+# The gateway's JWT check doesn't work with the new JWT signing keys, so each
+# function checks its caller itself: a user token (moderate-win) or the cron
+# secret sent by pg_cron (send-cheerups, deliver-letters).
+[functions.moderate-win]
+verify_jwt = false
+
+[functions.send-cheerups]
+verify_jwt = false
+
+[functions.deliver-letters]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

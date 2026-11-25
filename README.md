@@ -7,8 +7,7 @@ Next.js (App Router) + Supabase (Postgres, Auth, Vault, Edge Functions), install
 ## Requirements
 
 - Node.js 20.9 or newer (22 recommended) and npm
-- A Supabase account. Development runs against a hosted project, so the app itself needs no Docker.
-- Docker Desktop, running, for `npm run db:test` only: the CLI runs `pg_prove` in a container even against the hosted project
+- A Supabase account. Development runs against a hosted project, so nothing needs Docker.
 - The Supabase CLI comes in as a dev dependency, so `npx supabase` works without a global install
 
 ## Getting started
@@ -46,8 +45,14 @@ The seed adds four `@example.com` users so the feed has content. You can't recei
 | `npm run tokens` | Regenerates `src/styles/tokens.css` from `design/tokens.json` |
 | `npm run db:push` | Applies new migrations to the linked project |
 | `npm run db:push:seed` | Applies migrations and `supabase/seed.sql` (development project only) |
-| `npm run db:test` | Runs the pgTAP tests in `supabase/tests` against the linked project. Each test file rolls back, so it leaves no data behind |
+| `npm run db:test` | Runs the pgTAP tests in `supabase/tests/database` against `SUPABASE_DB_URL`. Each test file rolls back, so it leaves no data behind. `npm run db:test -- safety` runs only matching files |
+| `npm run db:test:docker` | The same tests through `supabase test db --remote`, which needs Docker Desktop running |
 | `npm run db:types` | Regenerates `src/lib/supabase/database.types.ts` from the linked project |
+| `npm run icons` | Exports the PWA and notification PNGs in `public/icons` from `design/icons` |
+
+## Database tests
+
+`npm run db:test` connects straight to Postgres, so it needs the connection string in `.env.local`. In the Supabase dashboard, click **Connect** at the top of the project page, pick **Session pooler**, copy the URI, and replace `[YOUR-PASSWORD]` with the database password. Save it as `SUPABASE_DB_URL`. Use the Session pooler rather than the direct connection, which needs IPv6. Only ever point it at the development project.
 
 ## Project layout
 
@@ -57,13 +62,19 @@ scripts/build-tokens.mjs  Turns tokens.json into CSS variables and Tailwind them
 src/app/                Routes. (app)/ holds screens with the app shell; hard-day/ is full screen
 src/components/shell/   Desktop top bar and mobile bottom tab bar
 src/lib/supabase/       Browser, server and proxy Supabase clients, plus database types
-src/lib/actions/        Server Actions (sign-in, set-up, wins, celebrations)
+src/lib/actions/        Server Actions (sign-in, set-up, wins, celebrations, letters, push, reports)
 src/lib/wins/           Win queries, validation and composer ideas
+src/lib/letters/        Letter queries (bodies only ever come from open_letter())
+src/lib/push/client.ts  Service worker registration and Web Push subscribe/unsubscribe (browser only)
+src/lib/moderation.ts   Calls the moderate-win Edge Function, with a local fallback
+public/sw.js            Service worker: install support and cheer-up notifications
 src/lib/auth.ts         getUserId / getProfile / requireOnboardedProfile for pages and actions
 src/proxy.ts            Refreshes the Supabase session on each request and sends signed-out visitors to the welcome page (Next 16's name for middleware)
-supabase/migrations/    Schema, RLS policies and letter encryption
+supabase/migrations/    Schema, RLS, letter encryption, cheer-up scheduling, safety rules and cron jobs
+supabase/functions/     Edge Functions (Deno): moderate-win, send-cheerups, deliver-letters
+supabase/functions/_shared/moderation.ts  Moderation rules, shared by the Edge Function and the app
 supabase/seed.sql       Local development data
-supabase/tests/         pgTAP tests for RLS and the letter unlock rule
+supabase/tests/         pgTAP tests for RLS, the reminder selection rule, letter unlock and delivery, and safety
 ```
 
 ## Styling
@@ -84,6 +95,26 @@ Themes: Day is the default. `data-theme="night"` on `<html>` forces Night, `data
 - `reminder_log` is service-role only.
 - `profiles.onboarded_at` is null until the user finishes the set-up screen; app pages send them to `/setup` until then. `suggest_username()` powers the set-up screen's Shuffle button.
 - Celebrations are set with an update-then-insert rather than an upsert, because users may only update the `type` column.
+- **Cheer-ups:** turning them on books `profiles.next_cheerup_at`, a random moment 1 to 7 days away outside the user's quiet hours in their timezone. After each run the next slot is 4 to 10 days later. `claim_due_cheerups()` picks a win older than 14 days that isn't in `reminder_log` for the last 6 months, logs it and books the next slot in one transaction. Someone with no wins at all gets a "write your first win" nudge at most every 4 weeks. Someone whose wins are all too new or recently sent is skipped that week.
+- **Letter delivery:** `claim_due_letters()` returns due letters with the decrypted body and the author's email. It is callable only by the service role.
+- **Safety:** at most 20 wins per person per 24 hours (trigger, SQLSTATE `GJ429`). Public wins pass through `moderate-win` before saving. Private wins are never moderated. Three open reports hide a win from the feed. Moderators (`profiles.is_moderator`) review reports at `/moderation`, and "remove" makes the win private rather than deleting it.
+
+## Background jobs and Edge Functions
+
+`pg_cron` runs `send-cheerups` and `deliver-letters` every hour through `private.invoke_edge_function()`, which reads two Vault secrets. Letters run hourly rather than daily because each author's "today" depends on their timezone. One-time setup per Supabase project:
+
+1. Generate VAPID keys with `npx web-push generate-vapid-keys`. Put the public key in `NEXT_PUBLIC_VAPID_PUBLIC_KEY` and the private key in `VAPID_PRIVATE_KEY` in `.env.local`, and set `VAPID_SUBJECT` (e.g. `mailto:you@example.com`).
+2. Make a long random cron secret, for example with `openssl rand -base64 32`.
+3. In the Supabase dashboard, open **Database → Vault → Add new secret** and add:
+   - `project_url`: `https://<project-ref>.supabase.co`
+   - `cron_secret`: the value from step 2
+4. Copy `supabase/functions/.env.example` to `supabase/functions/.env`, fill it in (the same cron secret and VAPID keys, plus Resend), then run `npx supabase secrets set --env-file supabase/functions/.env`.
+5. Deploy the functions: `npx supabase functions deploy moderate-win send-cheerups deliver-letters`.
+6. In Resend, verify the domain used in `RESEND_FROM_EMAIL` (**Domains → Add domain**, then add the DNS records it shows).
+
+To check the jobs, look at **Integrations → Cron → Jobs** in the dashboard (run history), and **Edge Functions → \<name\> → Logs**.
+
+Push needs a production build: the service worker registers only when `NODE_ENV` is `production` (`npm run build && npm start`). On iPhone, push works only after Glowjar is added to the home screen.
 
 ## Setting up production
 

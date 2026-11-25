@@ -30,6 +30,20 @@
   }
 }
 
+/* Writing paper for letters: faint ruled lines that track the win-text line height (29px). */
+.lined-paper {
+  background-color: var(--color-surface-raised);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 28px,
+    var(--color-line) 28px,
+    var(--color-line) 29px
+  );
+  background-attachment: local;
+  background-position: 0 14px;
+}
+
 /* A freshly added win: a soft honey halo and a few dots that drift out and fade. */
 .win-glow {
   background: radial-gradient(closest-side, var(--color-glow-soft), transparent);
@@ -63,6 +77,42 @@
   100% {
     opacity: 0;
     transform: scale(1) translateY(-14px);
+  }
+}
+
+/* Hard Day screen: slow, dim lights and a gentle fade between wins. */
+.firefly {
+  opacity: 0.2;
+  box-shadow: 0 0 12px 4px var(--color-glow-soft);
+  animation: firefly-drift 10s ease-in-out infinite alternate;
+}
+
+.hard-day-card {
+  animation: fade-in 300ms ease-out both;
+}
+
+@keyframes firefly-drift {
+  0% {
+    opacity: 0.15;
+    transform: translate(0, 0);
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0.25;
+    transform: translate(18px, -24px);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 

@@ -6,6 +6,7 @@ import { createWin, updateWin, type WinFormState } from "@/lib/actions/wins";
 import { CATEGORIES, CATEGORY_ORDER, type WinCategory } from "@/lib/categories";
 import { EMOJI_CHOICES, WIN_IDEAS } from "@/lib/wins/ideas";
 import { charCount, MAX_WIN_LENGTH } from "@/lib/wins/validation";
+import { suggestsStruggle } from "../../../supabase/functions/_shared/moderation";
 
 export type ComposerValues = {
   text: string;
@@ -53,7 +54,9 @@ export function WinComposer({
       {returnTo && <input type="hidden" name="returnTo" value={returnTo} />}
       <input type="hidden" name="emoji" value={emoji ?? ""} />
 
-      <div className={`rounded-lg p-7 shadow-card transition-colors duration-300 ${CATEGORIES[category].tint}`}>
+      <div
+        className={`rounded-lg p-7 shadow-card transition-colors duration-300 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus-ring ${CATEGORIES[category].tint}`}
+      >
         {emoji && <p className="mb-3 text-win-emoji">{emoji}</p>}
         <label htmlFor={`${ids}-text`} className="sr-only">
           Your win
@@ -77,6 +80,21 @@ export function WinComposer({
           {remaining < 0 ? `${-remaining} over the limit` : `${remaining} left`}
         </p>
       </div>
+
+      {/* Never blocks writing: just a quiet offer of support. */}
+      {suggestsStruggle(text) && (
+        <p role="status" className="rounded-md bg-dusk px-4 py-3 text-label text-on-dusk">
+          It sounds like things are really hard right now. You don&apos;t have to carry this alone.{" "}
+          <a
+            href="https://findahelpline.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold underline underline-offset-4"
+          >
+            Find support near you
+          </a>
+        </p>
+      )}
 
       {showIdeas && (
         <div>

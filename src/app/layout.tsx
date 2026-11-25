@@ -21,6 +21,8 @@ export const metadata: Metadata = {
   },
   description: "Collect the little lights. An anonymous diary of small wins.",
   applicationName: "Glowjar",
+  appleWebApp: { capable: true, title: "Glowjar", statusBarStyle: "default" },
+  icons: { apple: "/icons/apple-touch-icon.png" },
 };
 
 export const viewport: Viewport = {

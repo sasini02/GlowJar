@@ -130,6 +130,7 @@ export type Database = {
           created_at: string
           default_visibility: Database["public"]["Enums"]["visibility"]
           is_moderator: boolean
+          next_cheerup_at: string | null
           nudge_time: Database["public"]["Enums"]["nudge_time"]
           onboarded_at: string | null
           quiet_end: string
@@ -376,6 +377,29 @@ export type Database = {
         Returns: string
       }
       suggest_username: { Args: never; Returns: string }
+      register_push_subscription: {
+        Args: { sub_auth: string; sub_endpoint: string; sub_p256dh: string }
+        Returns: undefined
+      }
+      resolve_reports: {
+        Args: {
+          decision: Database["public"]["Enums"]["report_status"]
+          target_win: string
+        }
+        Returns: undefined
+      }
+      open_reports: {
+        Args: never
+        Returns: {
+          first_reported_at: string
+          is_public: boolean
+          reasons: string[]
+          report_count: number
+          win_emoji: string | null
+          win_id: string
+          win_text: string
+        }[]
+      }
     }
     Enums: {
       celebration_type: "celebrate" | "proud" | "metoo"

@@ -26,5 +26,11 @@ async function SetupFormLoader() {
   if (!profile) redirect("/");
   if (profile.onboarded_at) redirect("/feed");
 
-  return <SetupForm initialUsername={profile.username} initialNudgeTime={profile.nudge_time} />;
+  return (
+    <SetupForm
+      initialUsername={profile.username}
+      initialNudgeTime={profile.nudge_time}
+      initialCheerupsEnabled={profile.cheerups_enabled}
+    />
+  );
 }

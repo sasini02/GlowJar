@@ -7,6 +7,7 @@ import type { WinView } from "@/lib/wins/queries";
 import { AuthorLine, WinTile } from "./win-tile";
 import { CelebrateControl } from "./celebrate-control";
 import { OwnWinMenu } from "./own-win-menu";
+import { ReportMenu } from "./report-menu";
 
 // Hover on desktop, keyboard focus, or a tap on touch screens (data-revealed) shows the controls.
 const HIDDEN_UNTIL_REVEALED =
@@ -21,16 +22,28 @@ type WinCardProps = {
 
 export function WinCard({ win, returnTo, className = "" }: WinCardProps) {
   const [revealed, setRevealed] = useState(false);
+  const [reported, setReported] = useState(false);
 
   function toggleReveal(event: MouseEvent<HTMLDivElement>) {
     if ((event.target as HTMLElement).closest("button, a")) return;
     setRevealed((value) => !value);
   }
 
+  if (reported) {
+    return (
+      <p role="status" className={`break-inside-avoid rounded-lg border border-line p-5 text-label text-ink-muted ${className}`}>
+        Thanks for letting us know. We&apos;ve hidden this win for you and a moderator will take a look.
+      </p>
+    );
+  }
+
   const actions = win.isOwn ? (
     <OwnWinMenu winId={win.id} returnTo={returnTo} hiddenUntilRevealed={HIDDEN_UNTIL_REVEALED} />
   ) : win.isPublic ? (
-    <CelebrateControl winId={win.id} initial={win.myCelebration} hiddenUntilRevealed={HIDDEN_UNTIL_REVEALED} />
+    <>
+      <CelebrateControl winId={win.id} initial={win.myCelebration} hiddenUntilRevealed={HIDDEN_UNTIL_REVEALED} />
+      <ReportMenu winId={win.id} hiddenUntilRevealed={HIDDEN_UNTIL_REVEALED} onReported={() => setReported(true)} />
+    </>
   ) : null;
 
   return (

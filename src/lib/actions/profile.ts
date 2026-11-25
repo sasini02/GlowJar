@@ -25,7 +25,6 @@ export async function completeSetup(_previous: SetupState, formData: FormData): 
 
   const username = String(formData.get("username") ?? "").replace(/\s+/g, " ").trim();
   const nudgeTime = String(formData.get("nudge_time") ?? "") as Enums<"nudge_time">;
-  const cheerupsEnabled = formData.get("cheerups_enabled") === "on";
   const timezone = String(formData.get("timezone") ?? "").trim();
 
   const usernameError = validateUsername(username);
@@ -36,7 +35,6 @@ export async function completeSetup(_previous: SetupState, formData: FormData): 
   const changes = {
     username,
     nudge_time: nudgeTime,
-    cheerups_enabled: cheerupsEnabled,
     onboarded_at: new Date().toISOString(),
     ...(timezone ? { timezone } : {}),
   };

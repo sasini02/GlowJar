@@ -89,6 +89,7 @@ export type Database = {
           deliver_on: string
           delivered_at: string | null
           id: string
+          opened_at: string | null
           user_id: string
         }
         Insert: {
@@ -97,6 +98,7 @@ export type Database = {
           deliver_on: string
           delivered_at?: string | null
           id?: string
+          opened_at?: string | null
           user_id: string
         }
         Update: {
@@ -105,6 +107,7 @@ export type Database = {
           deliver_on?: string
           delivered_at?: string | null
           id?: string
+          opened_at?: string | null
           user_id?: string
         }
         Relationships: [
@@ -423,6 +426,8 @@ export type Database = {
         Returns: string
       }
       suggest_username: { Args: never; Returns: string }
+      release_letter: { Args: { target_letter: string }; Returns: undefined }
+      remove_push_subscriptions: { Args: { endpoints: string[] }; Returns: number }
       register_push_subscription: {
         Args: { sub_auth: string; sub_endpoint: string; sub_p256dh: string }
         Returns: undefined

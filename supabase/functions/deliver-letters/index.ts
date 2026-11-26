@@ -1,7 +1,8 @@
 // Hourly: emails every letter whose delivery date has arrived in its author's
-// timezone, then marks it delivered. A letter that fails to send stays
-// undelivered and is retried on the next run. (It unlocks in the app on its
-// date either way; that rule lives in open_letter().)
+// timezone. claim_due_letters() marks letters delivered as it returns them, so
+// each is emailed at most once; one the author already opened in the app gets
+// no email at all. If sending fails, release_letter() puts it back for the next
+// run. (It unlocks in the app on its date either way; see open_letter().)
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { isCronRequest, json } from "../_shared/cron.ts";
 
@@ -32,16 +33,12 @@ Deno.serve(async (request) => {
   let delivered = 0;
 
   for (const letter of letters) {
-    const ok = await sendEmail(letter);
-    if (!ok) continue;
-
-    const { error: updateError } = await supabase
-      .from("letters")
-      .update({ delivered_at: new Date().toISOString() })
-      .eq("id", letter.letter_id)
-      .is("delivered_at", null);
-    if (updateError) console.error("Marking letter delivered failed", letter.letter_id, updateError);
-    else delivered += 1;
+    if (await sendEmail(letter)) {
+      delivered += 1;
+      continue;
+    }
+    const { error: releaseError } = await supabase.rpc("release_letter", { target_letter: letter.letter_id });
+    if (releaseError) console.error("Releasing letter for retry failed", letter.letter_id, releaseError);
   }
 
   return json({ due: letters.length, delivered });

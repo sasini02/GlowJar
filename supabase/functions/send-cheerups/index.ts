@@ -67,12 +67,14 @@ Deno.serve(async (request) => {
     }
   }
 
+  let removedSubscriptions = 0;
   if (expired.length) {
-    const { error: deleteError } = await supabase.from("push_subscriptions").delete().in("endpoint", expired);
-    if (deleteError) console.error("Removing expired subscriptions failed", deleteError);
+    const { data: removed, error: removeError } = await supabase.rpc("remove_push_subscriptions", { endpoints: expired });
+    if (removeError) console.error("Removing expired subscriptions failed", removeError);
+    else removedSubscriptions = removed ?? 0;
   }
 
-  return json({ users: due.length, sent, removedSubscriptions: expired.length });
+  return json({ users: due.length, sent, removedSubscriptions });
 });
 
 function buildPayload(cheerup: DueCheerup) {

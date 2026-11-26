@@ -85,5 +85,88 @@ select is(
 
 reset role;
 
+-- Each letter is emailed at most once --------------------------------------
+
+-- Bob's letter becomes due today in Pago Pago. He hasn't opened it.
+update public.letters set deliver_on = (now() at time zone 'Pacific/Pago_Pago')::date
+  where id = (select id from sealed where owner = 'bob-tomorrow-for-him');
+
+select is(
+  (select array_agg(letter_id) from public.claim_due_letters() where user_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'),
+  (select array_agg(id) from sealed where owner = 'bob-tomorrow-for-him'),
+  'a letter is claimed for its email once its date arrives'
+);
+
+select is_empty(
+  $$ select 1 from public.claim_due_letters() where user_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb' $$,
+  'a claimed letter is marked delivered, so the next hourly run does not email it again'
+);
+
+select public.release_letter((select id from sealed where owner = 'bob-tomorrow-for-him'));
+
+select is(
+  (select array_agg(letter_id) from public.claim_due_letters() where user_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'),
+  (select array_agg(id) from sealed where owner = 'bob-tomorrow-for-him'),
+  'a letter whose email failed is released and tried again on the next run'
+);
+
+-- A letter opened in the app needs no email --------------------------------
+
+-- Alice's due letter was opened above, so releasing it must not re-queue it.
+select public.release_letter((select id from sealed where owner = 'alice-due'));
+
+select isnt(
+  (select delivered_at from public.letters where id = (select id from sealed where owner = 'alice-due')),
+  null,
+  'releasing a letter its author has already opened leaves it delivered'
+);
+
+select is_empty(
+  $$ select 1 from public.claim_due_letters()
+     where user_id in ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb') $$,
+  'a letter already opened in the app is never emailed'
+);
+
+select isnt(
+  (select opened_at from public.letters where id = (select id from sealed where owner = 'alice-due')),
+  null,
+  'opening a letter in the app records when it was first opened'
+);
+
+set local request.jwt.claims = '{"sub":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","role":"authenticated"}';
+set local role authenticated;
+
+select throws_ok(
+  format('select public.release_letter(%L)', (select id from sealed where owner = 'alice-due')),
+  '42501', null,
+  'app users cannot touch the delivery queue'
+);
+
+select throws_ok(
+  $$ select public.remove_push_subscriptions(array['https://push.example/x']) $$,
+  '42501', null,
+  'app users cannot remove other people''s push subscriptions'
+);
+
+reset role;
+
+-- Expired push subscriptions ------------------------------------------------
+
+insert into public.push_subscriptions (user_id, endpoint, p256dh, auth) values
+  ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'https://push.example/gone', 'k', 'a'),
+  ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'https://push.example/alive', 'k', 'a');
+
+select is(
+  public.remove_push_subscriptions(array['https://push.example/gone']),
+  1,
+  'the cheer-up job can remove a subscription the push service reports as gone'
+);
+
+select is(
+  (select array_agg(endpoint) from public.push_subscriptions where user_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
+  array['https://push.example/alive'],
+  'other subscriptions are left alone'
+);
+
 select * from finish();
 rollback;

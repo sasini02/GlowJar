@@ -1,4 +1,4 @@
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { redirectWithCookies, updateSession } from "@/lib/supabase/proxy";
 
 // /offline is served by the service worker without a session, so it must never redirect.
@@ -9,8 +9,18 @@ function isPublic(pathname: string) {
 }
 
 export async function proxy(request: NextRequest) {
+  const { pathname, searchParams } = request.nextUrl;
+
+  // If a sign-in link's redirect address isn't on Supabase's allow list, Supabase
+  // falls back to the bare Site URL with the one-time code attached. Hand it to
+  // the callback so the sign-in still completes instead of landing on the welcome page.
+  if (pathname === "/" && (searchParams.has("code") || searchParams.has("token_hash"))) {
+    const callback = request.nextUrl.clone();
+    callback.pathname = "/auth/callback";
+    return NextResponse.redirect(callback);
+  }
+
   const { response, userId } = await updateSession(request);
-  const { pathname } = request.nextUrl;
 
   if (!userId && !isPublic(pathname)) {
     return redirectWithCookies(request, response, "/");

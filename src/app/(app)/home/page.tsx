@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
-import { Bell } from "lucide-react";
 import { CheerList } from "@/components/home/cheer-list";
 import { InlineComposer } from "@/components/home/inline-composer";
 import { NextMilestone } from "@/components/home/next-milestone";
@@ -9,6 +8,7 @@ import { HomeOnThisDay } from "@/components/home/on-this-day";
 import { StatTiles } from "@/components/home/stat-tiles";
 import { TopCategory } from "@/components/home/top-category";
 import { MoodQuickPick } from "@/components/mood/mood-quick-pick";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { MilestoneSheet } from "@/components/streak/milestone-sheet";
 import { MonthDots } from "@/components/streak/month-dots";
 import { StreakHero } from "@/components/streak/streak-hero";
@@ -69,13 +69,7 @@ async function Home() {
           </h1>
         </div>
         <div className="flex items-center gap-2 md:gap-2.5">
-          <Link
-            href="/notifications"
-            aria-label="Notifications"
-            className="inline-flex size-11 items-center justify-center rounded-pill border border-line bg-surface-raised text-ink"
-          >
-            <Bell className="size-5" strokeWidth={1.75} aria-hidden="true" />
-          </Link>
+          <NotificationBell today={today} />
           <Link
             href="/settings"
             aria-label="Your profile and settings"

@@ -54,12 +54,12 @@ export function CheerupsSwitch({ initialEnabled, onChange }: CheerupsSwitchProps
 
   return (
     <div>
-      <div className="flex items-start justify-between gap-4 rounded-md border border-line bg-surface-raised p-4">
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <p id="cheerups-label" className="text-label text-ink">
+          <h2 id="cheerups-label" className="font-serif text-[20px] leading-[26px] font-semibold">
             Weekly cheer-ups
-          </p>
-          <p id="cheerups-hint" className="mt-1 text-caption text-ink-muted">
+          </h2>
+          <p id="cheerups-hint" className="mt-0.5 text-label font-normal text-ink-muted">
             Once a week we send back one of your own past wins, at a quiet, random moment.
           </p>
         </div>

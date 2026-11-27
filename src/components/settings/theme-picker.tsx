@@ -29,13 +29,13 @@ export function ThemePicker({ initial }: { initial: ThemePreference }) {
 
   return (
     <fieldset>
-      <legend className="font-serif text-title">Theme</legend>
-      <p className="mt-1 text-ink-muted">Auto follows your device&apos;s light or dark setting.</p>
-      <div className="mt-4 grid grid-cols-3 gap-3">
+      <legend className="font-serif text-[20px] leading-[26px] font-semibold">Theme</legend>
+      <p className="mt-0.5 text-label font-normal text-ink-muted">Auto follows your device&apos;s light or dark setting.</p>
+      <div className="mt-3 grid grid-cols-3 gap-3">
         {OPTIONS.map(({ value, label, icon: Icon }) => (
           <label
             key={value}
-            className="flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-md border border-line bg-surface-raised px-3 text-label text-ink transition-colors duration-200 has-checked:border-dusk has-checked:bg-card-sky has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus-ring"
+            className="flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-md border border-line bg-surface px-3 text-label text-ink transition-colors duration-200 has-checked:border-dusk has-checked:bg-card-sky has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus-ring"
           >
             <input
               type="radio"

@@ -63,18 +63,37 @@ export async function completeSetup(_previous: SetupState, formData: FormData): 
 
 export type SettingsState = { status: "idle" | "saved" | "error"; message: string | null };
 
+export type UsernameState = SettingsState & { username?: string };
+
+/** Saves just the public name, from its own Save button on the settings page. */
+export async function updateUsername(_previous: UsernameState, formData: FormData): Promise<UsernameState> {
+  const userId = await requireUserId();
+  const username = String(formData.get("username") ?? "").replace(/\s+/g, " ").trim();
+
+  const usernameError = validateUsername(username);
+  if (usernameError) return { status: "error", message: usernameError };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("profiles").update({ username }).eq("user_id", userId);
+  if (error) {
+    if (error.code === "23505") return { status: "error", message: "Someone already has that name. Try another, or shuffle." };
+    console.error("updateUsername failed", error.code, error.message);
+    return { status: "error", message: "We couldn't save that just now. Please try again." };
+  }
+
+  refresh();
+  return { status: "saved", message: `Saved. You're ${username} now.`, username };
+}
+
 export async function updateSettings(_previous: SettingsState, formData: FormData): Promise<SettingsState> {
   const userId = await requireUserId();
 
-  const username = String(formData.get("username") ?? "").replace(/\s+/g, " ").trim();
   const nudgeTime = String(formData.get("nudge_time") ?? "") as Enums<"nudge_time">;
   const quietStart = String(formData.get("quiet_start") ?? "");
   const quietEnd = String(formData.get("quiet_end") ?? "");
   const visibility = String(formData.get("default_visibility") ?? "") as Enums<"visibility">;
   const glowReminders = formData.get("glow_reminders") === "on";
 
-  const usernameError = validateUsername(username);
-  if (usernameError) return { status: "error", message: usernameError };
   if (!NUDGE_TIMES.includes(nudgeTime)) return { status: "error", message: "Pick a time for your daily nudge." };
   if (!TIME_OF_DAY.test(quietStart) || !TIME_OF_DAY.test(quietEnd)) {
     return { status: "error", message: "Quiet hours need a start and an end time." };
@@ -88,7 +107,6 @@ export async function updateSettings(_previous: SettingsState, formData: FormDat
   const { error } = await supabase
     .from("profiles")
     .update({
-      username,
       nudge_time: nudgeTime,
       glow_reminders_enabled: glowReminders,
       quiet_start: quietStart,
@@ -98,13 +116,12 @@ export async function updateSettings(_previous: SettingsState, formData: FormDat
     .eq("user_id", userId);
 
   if (error) {
-    if (error.code === "23505") return { status: "error", message: "Someone already has that name. Try another, or shuffle." };
     console.error("updateSettings failed", error.code, error.message);
     return { status: "error", message: "We couldn't save that just now. Please try again." };
   }
 
   refresh();
-  return { status: "saved", message: "Saved." };
+  return { status: "saved", message: "Saved your preferences." };
 }
 
 export async function updateTheme(theme: Enums<"theme_preference">): Promise<{ error: string | null }> {

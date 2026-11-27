@@ -26,7 +26,7 @@ export function DeleteAccount({ username }: { username: string }) {
   const matches = typed.trim().toLowerCase() === username.toLowerCase();
 
   return (
-    <form action={formAction} className="flex flex-col gap-4 rounded-md border border-line bg-surface-raised p-5">
+    <form action={formAction} className="flex flex-col gap-4 rounded-md border border-line bg-surface p-5">
       <p className="text-ink">
         This deletes your account and everything in it: every win, every letter (sealed ones too), your celebrations
         and your recaps. It can&apos;t be undone. If you&apos;d like a copy, download your data first.

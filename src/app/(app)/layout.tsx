@@ -4,6 +4,7 @@ import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { ServiceWorkerRegistrar } from "@/components/pwa/service-worker-registrar";
 import { CelebrationToasts } from "@/components/realtime/celebration-toasts";
 import { ThemeSync } from "@/components/settings/theme-sync";
+import { TimezoneSync } from "@/components/settings/timezone-sync";
 import { BottomNav } from "@/components/nav/bottom-nav";
 import { LightsTodayCard } from "@/components/nav/lights-today-card";
 import { Sidebar } from "@/components/nav/sidebar";
@@ -38,5 +39,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
 async function ProfileTheme() {
   const profile = await getProfile();
-  return profile ? <ThemeSync theme={profile.theme} /> : null;
+  if (!profile) return null;
+  return (
+    <>
+      <ThemeSync theme={profile.theme} />
+      <TimezoneSync saved={profile.timezone} />
+    </>
+  );
 }

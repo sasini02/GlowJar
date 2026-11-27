@@ -144,3 +144,29 @@ function validateUsername(username: string): string | null {
   if (username.includes("@")) return "Names can't contain @, so your email stays private.";
   return null;
 }
+
+/**
+ * Keeps the profile's timezone in step with the device the person is using.
+ * Their "today" (greeting, streak, mood, reminders) follows it, so a wrong one
+ * makes the whole app feel off by hours.
+ */
+export async function syncTimezone(timezone: string): Promise<void> {
+  const userId = await requireUserId();
+  const name = timezone.trim();
+  if (!name || name.length > 64) return;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({ timezone: name })
+    .eq("user_id", userId)
+    .neq("timezone", name)
+    .select("user_id");
+
+  // 22023: a name Postgres doesn't know (the profiles trigger checks). Keep the current one.
+  if (error) {
+    if (error.code !== "22023") console.error("syncTimezone failed", error.code, error.message);
+    return;
+  }
+  if (data.length > 0) refresh();
+}

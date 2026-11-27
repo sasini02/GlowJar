@@ -35,7 +35,7 @@ export default function OfflinePage() {
           showIdeas={false}
         />
 
-        <Link href="/feed" className="w-fit text-label text-ink-muted underline underline-offset-4 hover:text-ink">
+        <Link href="/home" className="w-fit text-label text-ink-muted underline underline-offset-4 hover:text-ink">
           Try loading Glowjar again
         </Link>
       </main>

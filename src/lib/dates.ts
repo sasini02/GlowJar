@@ -48,3 +48,64 @@ export function formatMonth(isoDate: string, { withYear = false }: { withYear?: 
 export function formatShortMonth(isoDate: string): string {
   return toUtcNoon(isoDate).toLocaleDateString("en-GB", { month: "short", year: "2-digit", timeZone: "UTC" });
 }
+
+/** The local calendar date of a timestamp in the given IANA timezone. */
+export function toLocalDate(timestamp: string | Date, timezone: string): string {
+  return localToday(timezone, typeof timestamp === "string" ? new Date(timestamp) : timestamp);
+}
+
+/** 0 for Monday through 6 for Sunday: Glowjar weeks start on Monday. */
+export function weekdayIndex(isoDate: string): number {
+  return (toUtcNoon(isoDate).getUTCDay() + 6) % 7;
+}
+
+/** The Monday of the week that contains `isoDate`. */
+export function startOfWeek(isoDate: string): string {
+  return addDays(isoDate, -weekdayIndex(isoDate));
+}
+
+/** The seven dates, Monday to Sunday, of the week that contains `isoDate`. */
+export function weekDates(isoDate: string): string[] {
+  const monday = startOfWeek(isoDate);
+  return Array.from({ length: 7 }, (_, index) => addDays(monday, index));
+}
+
+export function startOfMonth(isoDate: string): string {
+  return `${isoDate.slice(0, 7)}-01`;
+}
+
+/** Every date in the month that contains `isoDate`, from the 1st. */
+export function monthDates(isoDate: string): string[] {
+  const first = startOfMonth(isoDate);
+  const length = daysBetween(first, addMonths(first, 1));
+  return Array.from({ length }, (_, index) => addDays(first, index));
+}
+
+/** "Thursday, 26 November" */
+export function formatDayHeading(isoDate: string): string {
+  return toUtcNoon(isoDate).toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  });
+}
+
+/** "M", "T", "W"... for compact week rows. */
+export function formatWeekdayLetter(isoDate: string): string {
+  return formatWeekdayShort(isoDate).charAt(0);
+}
+
+/** "Mon", "Tue"... */
+export function formatWeekdayShort(isoDate: string): string {
+  return toUtcNoon(isoDate).toLocaleDateString("en-GB", { weekday: "short", timeZone: "UTC" });
+}
+
+/** "Monday", "Tuesday"... for accessible labels. */
+export function formatWeekdayLong(isoDate: string): string {
+  return toUtcNoon(isoDate).toLocaleDateString("en-GB", { weekday: "long", timeZone: "UTC" });
+}
+
+export function dayOfMonth(isoDate: string): number {
+  return Number(isoDate.slice(8, 10));
+}

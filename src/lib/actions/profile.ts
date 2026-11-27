@@ -58,7 +58,7 @@ export async function completeSetup(_previous: SetupState, formData: FormData): 
     return { error: "We couldn't save that just now. Please try again." };
   }
 
-  redirect("/feed");
+  redirect("/home");
 }
 
 export type SettingsState = { status: "idle" | "saved" | "error"; message: string | null };
@@ -71,6 +71,7 @@ export async function updateSettings(_previous: SettingsState, formData: FormDat
   const quietStart = String(formData.get("quiet_start") ?? "");
   const quietEnd = String(formData.get("quiet_end") ?? "");
   const visibility = String(formData.get("default_visibility") ?? "") as Enums<"visibility">;
+  const glowReminders = formData.get("glow_reminders") === "on";
 
   const usernameError = validateUsername(username);
   if (usernameError) return { status: "error", message: usernameError };
@@ -89,6 +90,7 @@ export async function updateSettings(_previous: SettingsState, formData: FormDat
     .update({
       username,
       nudge_time: nudgeTime,
+      glow_reminders_enabled: glowReminders,
       quiet_start: quietStart,
       quiet_end: quietEnd,
       default_visibility: visibility,

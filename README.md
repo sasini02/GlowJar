@@ -42,6 +42,7 @@ The seed adds four `@example.com` users so the feed has content. You can't recei
 | `npm run dev` | Next.js dev server |
 | `npm run build` / `npm start` | Production build and server |
 | `npm run lint` / `npm run typecheck` | ESLint and TypeScript checks |
+| `npm test` | Vitest unit tests (`src/**/*.test.ts`), including the streak and mood rules. `npm run test:watch` reruns on save |
 | `npm run tokens` | Regenerates `src/styles/tokens.css` from `design/tokens.json` |
 | `npm run db:push` | Applies new migrations to the linked project |
 | `npm run db:push:seed` | Applies migrations and `supabase/seed.sql` (development project only) |
@@ -60,12 +61,21 @@ The seed adds four `@example.com` users so the feed has content. You can't recei
 design/                 Design tokens and icons (source of truth for the theme)
 scripts/build-tokens.mjs  Turns tokens.json into CSS variables and Tailwind theme values
 src/app/                Routes. (app)/ holds screens with the app shell; hard-day/ is full screen
-src/components/shell/   Desktop top bar and mobile bottom tab bar
+src/components/nav/     Sidebar (tablet and desktop) and the floating bottom nav (phones)
+src/components/streak/  Streak card, week row, month dots, jar art and the milestone sheet
+src/components/mood/    Mood orb, slider, tags, check-in, mood board grid and insights
+src/components/home/    The other Home cards: stats, next milestone, categories, On this day, cheers, inline composer
 src/lib/supabase/       Browser, server and proxy Supabase clients, plus database types
 src/lib/actions/        Server Actions (sign-in, set-up, wins, celebrations, letters, push, reports)
 src/lib/wins/           Win queries, validation and composer ideas
 src/lib/letters/        Letter queries (bodies only ever come from open_letter())
 src/lib/jar/            Shelf, On this day and monthly recap queries
+src/lib/streak.ts       computeStreak(): the glow streak, rest days and calendar, as a pure function
+src/lib/milestones.ts   Streak milestones and the jar style each one unlocks
+src/lib/mood.ts         MOOD_LEVELS (the shared 7-step scale), mood tags and the mood board insights
+src/lib/dates.ts        Calendar-date helpers on "YYYY-MM-DD" strings; weeks start on Monday
+src/lib/home/           Lit dates, month categories, lights today and streak record keeping
+src/lib/moods/          Mood queries (owner only)
 src/lib/offline/queue.ts  IndexedDB queue for wins written offline (browser only)
 src/lib/theme.ts        Day / Night / Auto: the pre-paint boot script and applyTheme()
 src/lib/supabase/admin.ts  Secret-key client, used only to delete accounts
@@ -75,10 +85,10 @@ public/sw.js            Service worker: install support, the offline page and ch
 src/lib/auth.ts         getUserId / getProfile / requireOnboardedProfile for pages and actions
 src/proxy.ts            Refreshes the Supabase session on each request and sends signed-out visitors to the welcome page (Next 16's name for middleware)
 supabase/migrations/    Schema, RLS, letter encryption, cheer-up scheduling, safety rules and cron jobs
-supabase/functions/     Edge Functions (Deno): moderate-win, send-cheerups, deliver-letters
+supabase/functions/     Edge Functions (Deno): moderate-win, send-cheerups, deliver-letters, send-glow-reminders
 supabase/functions/_shared/moderation.ts  Moderation rules, shared by the Edge Function and the app
 supabase/seed.sql       Local development data
-supabase/tests/         pgTAP tests for RLS, the reminder selection rule, letter unlock and delivery, and safety
+supabase/tests/         pgTAP tests for RLS, the reminder selection rule, letter unlock and delivery, safety, streaks and moods
 ```
 
 ## Styling
@@ -101,8 +111,10 @@ Themes: Day is the default. `data-theme="night"` on `<html>` forces Night, `data
 - Celebrations are set with an update-then-insert rather than an upsert, because users may only update the `type` column.
 - **Cheer-ups:** turning them on books `profiles.next_cheerup_at`, a random moment 1 to 7 days away outside the user's quiet hours in their timezone. After each run the next slot is 4 to 10 days later. `claim_due_cheerups()` picks a win older than 14 days that isn't in `reminder_log` for the last 6 months, logs it and books the next slot in one transaction. Someone with no wins at all gets a "write your first win" nudge at most every 4 weeks. Someone whose wins are all too new or recently sent is skipped that week.
 - **Letter delivery:** `claim_due_letters()` returns due letters with the decrypted body and the author's email. It is callable only by the service role.
+- **Glow streak:** `wins.local_date` is the win's date in the author's timezone, set by a trigger at insert and never changed afterwards. `my_lit_dates(since)` returns the days with at least one win, and `computeStreak()` in `src/lib/streak.ts` does the rest: up to two unlit rest days per Monday–Sunday week, a pause (never a reset) when they run out, and rest days before the first light trimmed off. Home records new milestones in `streak_milestones` and a new `profiles.best_streak` when it renders, because a streak can reach a milestone overnight when an unlit day becomes a rest day. Closing the milestone sheet marks it seen and sets `profiles.jar_style`.
+- **Moods:** `moods` holds one check-in per user per local day, readable only by its owner. Save with `save_mood(level, tags)`, which works out "today" in the user's timezone and updates the day's row if there is one. Leaving `tags` out keeps the tags already saved. Moods are never joined into feed queries, and nothing aggregates them across users. `lights_today()` returns only a count of everyone's wins since local midnight.
 - **My jar:** `wins.search` is a generated `tsvector` (English stemming) with a GIN index, so search runs in Postgres. `jar_shelf()` counts past months in the user's timezone and leaves the current month in the jar.
-- **On this day:** `on_this_day()` returns one of the user's own wins from 6 months or a whole number of years ago (up to 5), within three days of the date, closest first, so the card doesn't change between refreshes.
+- **On this day:** `on_this_day()` returns one of the user's own wins from 3 or 6 months or a whole number of years ago (up to 5), within three days of the date, closest first, so the card doesn't change between refreshes.
 - **Monthly recaps:** `monthly_recaps` holds one snapshot per user and month (total, lights per category, most-celebrated win). `private.build_due_recaps()` runs hourly and builds last month's recap once the 1st has arrived in each user's timezone. Months without wins get no recap. The migration backfilled every finished month that already had wins.
 - **Realtime:** `celebrations` is in the `supabase_realtime` publication. Realtime applies RLS per subscriber, so authors only receive reactions on their own wins. The toast never says who celebrated.
 - **Account deletion:** deleting the auth user cascades to every table. The settings screen asks the user to type their name first.
@@ -110,7 +122,7 @@ Themes: Day is the default. `data-theme="night"` on `<html>` forces Night, `data
 
 ## Background jobs and Edge Functions
 
-`pg_cron` runs `send-cheerups` and `deliver-letters` every hour through `private.invoke_edge_function()`, which reads two Vault secrets. A third hourly job, `build-recaps`, is plain SQL and needs no setup. Letters run hourly rather than daily because each author's "today" depends on their timezone. One-time setup per Supabase project:
+`pg_cron` runs `send-cheerups`, `deliver-letters` and `send-glow-reminders` every hour through `private.invoke_edge_function()`, which reads two Vault secrets. A third hourly job, `build-recaps`, is plain SQL and needs no setup. Letters run hourly rather than daily because each author's "today" depends on their timezone. One-time setup per Supabase project:
 
 1. Generate VAPID keys with `npx web-push generate-vapid-keys`. Put the public key in `NEXT_PUBLIC_VAPID_PUBLIC_KEY` and the private key in `VAPID_PRIVATE_KEY` in `.env.local`, and set `VAPID_SUBJECT` (e.g. `mailto:you@example.com`).
 2. Make a long random cron secret, for example with `openssl rand -base64 32`.
@@ -118,8 +130,10 @@ Themes: Day is the default. `data-theme="night"` on `<html>` forces Night, `data
    - `project_url`: `https://<project-ref>.supabase.co`
    - `cron_secret`: the value from step 2
 4. Copy `supabase/functions/.env.example` to `supabase/functions/.env`, fill it in (the same cron secret and VAPID keys, plus Resend), then run `npx supabase secrets set --env-file supabase/functions/.env`.
-5. Deploy the functions: `npx supabase functions deploy moderate-win send-cheerups deliver-letters`.
+5. Deploy the functions: `npx supabase functions deploy moderate-win send-cheerups deliver-letters send-glow-reminders`.
 6. In Resend, verify the domain used in `RESEND_FROM_EMAIL` (**Domains → Add domain**, then add the DNS records it shows).
+
+`send-glow-reminders` sends one push a day to people who haven't added a win yet, in the two hours after their daily nudge time. `claim_due_glow_reminders()` skips 22:00–08:00 local time and the user's own quiet hours, and records the day in `profiles.last_glow_reminder_on` so nobody gets two. People can turn it off under Settings → Daily nudge.
 
 To check the jobs, look at **Integrations → Cron → Jobs** in the dashboard (run history), and **Edge Functions → \<name\> → Logs**.
 

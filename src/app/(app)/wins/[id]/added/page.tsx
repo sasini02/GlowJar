@@ -50,10 +50,10 @@ async function WinAdded({ params }: Pick<PageProps<"/wins/[id]/added">, "params"
           Add another
         </Link>
         <Link
-          href="/feed"
+          href="/home"
           className="inline-flex min-h-12 items-center justify-center rounded-md border border-line px-6 text-label text-ink transition-colors duration-200 hover:bg-surface-raised"
         >
-          Back to the feed
+          Back to home
         </Link>
       </div>
 

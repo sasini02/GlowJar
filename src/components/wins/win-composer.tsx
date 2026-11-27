@@ -26,6 +26,9 @@ type WinComposerProps = {
   showIdeas?: boolean;
   autoFocus?: boolean;
   onCancel?: () => void;
+  /** Save without leaving the page, then call `onSaved` (used on Home). */
+  stayOnSave?: boolean;
+  onSaved?: () => void;
 };
 
 const initialState: WinFormState = { error: null };
@@ -38,10 +41,20 @@ export function WinComposer({
   showIdeas = !winId,
   autoFocus = false,
   onCancel,
+  stayOnSave = false,
+  onSaved,
 }: WinComposerProps) {
-  const [state, formAction, saving] = useActionState(winId ? updateWin : createWin, initialState);
   const [text, setText] = useState(initial.text);
   const [emoji, setEmoji] = useState(initial.emoji);
+  const [state, formAction, saving] = useActionState(async (previous: WinFormState, formData: FormData) => {
+    const result = await (winId ? updateWin : createWin)(previous, formData);
+    if (result.savedAt) {
+      setText("");
+      setEmoji(null);
+      onSaved?.();
+    }
+    return result;
+  }, initialState);
   const [category, setCategory] = useState(initial.category);
   const [isPublic, setIsPublic] = useState(initial.isPublic);
   const [queued, setQueued] = useState<"idle" | "queued" | "failed">("idle");
@@ -69,6 +82,7 @@ export function WinComposer({
     <form action={formAction} onSubmit={queueIfOffline} className="flex flex-col gap-6">
       {winId && <input type="hidden" name="id" value={winId} />}
       {returnTo && <input type="hidden" name="returnTo" value={returnTo} />}
+      {stayOnSave && <input type="hidden" name="stay" value="1" />}
       <input type="hidden" name="emoji" value={emoji ?? ""} />
 
       <div

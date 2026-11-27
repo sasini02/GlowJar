@@ -170,14 +170,73 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
           },
+          {
+            foreignKeyName: "monthly_recaps_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      moods: {
+        Row: {
+          created_at: string
+          id: string
+          level: number
+          local_date: string
+          note: string | null
+          tags: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          level: number
+          local_date: string
+          note?: string | null
+          tags?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          level?: number
+          local_date?: string
+          note?: string | null
+          tags?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "moods_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "moods_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       profiles: {
         Row: {
+          best_streak: number
           cheerups_enabled: boolean
           created_at: string
           default_visibility: Database["public"]["Enums"]["visibility"]
+          glow_reminders_enabled: boolean
           is_moderator: boolean
+          jar_style: string
+          last_glow_reminder_on: string | null
           next_cheerup_at: string | null
           nudge_time: Database["public"]["Enums"]["nudge_time"]
           onboarded_at: string | null
@@ -189,10 +248,15 @@ export type Database = {
           username: string
         }
         Insert: {
+          best_streak?: number
           cheerups_enabled?: boolean
           created_at?: string
           default_visibility?: Database["public"]["Enums"]["visibility"]
+          glow_reminders_enabled?: boolean
           is_moderator?: boolean
+          jar_style?: string
+          last_glow_reminder_on?: string | null
+          next_cheerup_at?: string | null
           nudge_time?: Database["public"]["Enums"]["nudge_time"]
           onboarded_at?: string | null
           quiet_end?: string
@@ -203,10 +267,15 @@ export type Database = {
           username: string
         }
         Update: {
+          best_streak?: number
           cheerups_enabled?: boolean
           created_at?: string
           default_visibility?: Database["public"]["Enums"]["visibility"]
+          glow_reminders_enabled?: boolean
           is_moderator?: boolean
+          jar_style?: string
+          last_glow_reminder_on?: string | null
+          next_cheerup_at?: string | null
           nudge_time?: Database["public"]["Enums"]["nudge_time"]
           onboarded_at?: string | null
           quiet_end?: string
@@ -352,6 +421,42 @@ export type Database = {
           },
         ]
       }
+      streak_milestones: {
+        Row: {
+          days: number
+          reached_on: string
+          seen: boolean
+          user_id: string
+        }
+        Insert: {
+          days: number
+          reached_on: string
+          seen?: boolean
+          user_id: string
+        }
+        Update: {
+          days?: number
+          reached_on?: string
+          seen?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "streak_milestones_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "streak_milestones_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       wins: {
         Row: {
           category: Database["public"]["Enums"]["win_category"]
@@ -359,6 +464,7 @@ export type Database = {
           emoji: string | null
           id: string
           is_public: boolean
+          local_date: string
           search: unknown
           text: string
           updated_at: string
@@ -370,6 +476,8 @@ export type Database = {
           emoji?: string | null
           id?: string
           is_public?: boolean
+          local_date?: string
+          search?: unknown
           text: string
           updated_at?: string
           user_id: string
@@ -380,6 +488,8 @@ export type Database = {
           emoji?: string | null
           id?: string
           is_public?: boolean
+          local_date?: string
+          search?: unknown
           text?: string
           updated_at?: string
           user_id?: string
@@ -420,35 +530,34 @@ export type Database = {
       }
     }
     Functions: {
-      open_letter: { Args: { letter_id: string }; Returns: string }
-      seal_letter: {
-        Args: { body: string; deliver_on: string }
-        Returns: string
-      }
-      suggest_username: { Args: never; Returns: string }
-      release_letter: { Args: { target_letter: string }; Returns: undefined }
-      remove_push_subscriptions: { Args: { endpoints: string[] }; Returns: number }
-      register_push_subscription: {
-        Args: { sub_auth: string; sub_endpoint: string; sub_p256dh: string }
-        Returns: undefined
-      }
-      resolve_reports: {
-        Args: {
-          decision: Database["public"]["Enums"]["report_status"]
-          target_win: string
-        }
-        Returns: undefined
-      }
-      open_reports: {
-        Args: never
+      claim_due_cheerups: {
+        Args: { max_users?: number }
         Returns: {
-          first_reported_at: string
-          is_public: boolean
-          reasons: string[]
-          report_count: number
-          win_emoji: string | null
+          kind: string
+          subscriptions: Json
+          user_id: string
+          win_emoji: string
           win_id: string
           win_text: string
+        }[]
+      }
+      claim_due_glow_reminders: {
+        Args: { max_users?: number }
+        Returns: {
+          subscriptions: Json
+          user_id: string
+        }[]
+      }
+      claim_due_letters: {
+        Args: { max_letters?: number }
+        Returns: {
+          body: string
+          deliver_on: string
+          email: string
+          letter_id: string
+          user_id: string
+          username: string
+          written_on: string
         }[]
       }
       jar_shelf: {
@@ -458,17 +567,72 @@ export type Database = {
           month: string
         }[]
       }
+      lights_today: { Args: never; Returns: number }
+      my_lit_dates: { Args: { since: string }; Returns: string[] }
       on_this_day: {
         Args: never
         Returns: {
           category: Database["public"]["Enums"]["win_category"]
           created_at: string
-          emoji: string | null
+          emoji: string
           months_ago: number
           text: string
           win_id: string
         }[]
       }
+      open_letter: { Args: { letter_id: string }; Returns: string }
+      open_reports: {
+        Args: never
+        Returns: {
+          first_reported_at: string
+          is_public: boolean
+          reasons: string[]
+          report_count: number
+          win_emoji: string
+          win_id: string
+          win_text: string
+        }[]
+      }
+      register_push_subscription: {
+        Args: { sub_auth: string; sub_endpoint: string; sub_p256dh: string }
+        Returns: undefined
+      }
+      release_letter: { Args: { target_letter: string }; Returns: undefined }
+      remove_push_subscriptions: {
+        Args: { endpoints: string[] }
+        Returns: number
+      }
+      resolve_reports: {
+        Args: {
+          decision: Database["public"]["Enums"]["report_status"]
+          target_win: string
+        }
+        Returns: undefined
+      }
+      save_mood: {
+        Args: { mood_level: number; mood_tags?: string[] }
+        Returns: {
+          created_at: string
+          id: string
+          level: number
+          local_date: string
+          note: string | null
+          tags: string[]
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "moods"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      seal_letter: {
+        Args: { body: string; deliver_on: string }
+        Returns: string
+      }
+      suggest_username: { Args: never; Returns: string }
     }
     Enums: {
       celebration_type: "celebrate" | "proud" | "metoo"

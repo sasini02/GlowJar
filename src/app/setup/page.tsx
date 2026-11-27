@@ -24,7 +24,7 @@ async function SetupFormLoader() {
   await requireUserId();
   const profile = await getProfile();
   if (!profile) redirect("/");
-  if (profile.onboarded_at) redirect("/feed");
+  if (profile.onboarded_at) redirect("/home");
 
   return (
     <SetupForm

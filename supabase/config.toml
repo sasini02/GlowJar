@@ -402,7 +402,7 @@ deno_version = 2
 
 # The gateway's JWT check doesn't work with the new JWT signing keys, so each
 # function checks its caller itself: a user token (moderate-win) or the cron
-# secret sent by pg_cron (send-cheerups, deliver-letters).
+# secret sent by pg_cron (send-cheerups, deliver-letters, send-glow-reminders).
 [functions.moderate-win]
 verify_jwt = false
 
@@ -410,6 +410,9 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.deliver-letters]
+verify_jwt = false
+
+[functions.send-glow-reminders]
 verify_jwt = false
 
 [analytics]

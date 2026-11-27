@@ -16,7 +16,7 @@ export default function HardDayPage() {
     <main className="relative flex min-h-dvh flex-col overflow-hidden bg-dusk px-6 pt-6 pb-10 text-on-dusk">
       <Fireflies />
       <Link
-        href="/feed"
+        href="/home"
         className="relative inline-flex min-h-11 w-fit items-center gap-2 rounded-pill px-3 text-label text-on-dusk/90 hover:text-on-dusk"
       >
         <ArrowLeft className="size-4" strokeWidth={1.75} aria-hidden="true" />

@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "Glowjar",
     description: "Collect the little lights. An anonymous diary of small wins.",
     id: "/",
-    start_url: "/feed",
+    start_url: "/home",
     scope: "/",
     display: "standalone",
     background_color: "#FBF7F0",

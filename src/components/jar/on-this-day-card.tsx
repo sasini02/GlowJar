@@ -2,13 +2,14 @@ import { CalendarHeart } from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
 import type { OnThisDayWin } from "@/lib/jar/queries";
 
-function howLongAgo(monthsAgo: number): string {
+export function howLongAgo(monthsAgo: number): string {
+  if (monthsAgo === 3) return "About three months ago";
   if (monthsAgo === 6) return "About six months ago";
   if (monthsAgo === 12) return "A year ago";
   return `${monthsAgo / 12} years ago`;
 }
 
-/** One of the viewer's own wins from about this date, half a year or more ago. */
+/** One of the viewer's own wins from about this date, three months or more ago. */
 export function OnThisDayCard({ win, className = "" }: { win: OnThisDayWin; className?: string }) {
   return (
     <section

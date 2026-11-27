@@ -37,6 +37,7 @@ async function SettingsContent() {
       <SettingsForm
         username={profile.username}
         nudgeTime={profile.nudge_time}
+        glowReminders={profile.glow_reminders_enabled}
         quietStart={profile.quiet_start.slice(0, 5)}
         quietEnd={profile.quiet_end.slice(0, 5)}
         defaultVisibility={profile.default_visibility}

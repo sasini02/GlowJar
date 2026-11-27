@@ -7,7 +7,11 @@ import { checkPublicWin } from "@/lib/moderation";
 import { createClient } from "@/lib/supabase/server";
 import { parseWinInput, type WinInput } from "@/lib/wins/validation";
 
-export type WinFormState = { error: string | null };
+export type WinFormState = {
+  error: string | null;
+  /** Set when a win was saved without leaving the page (the composers on Home). */
+  savedAt?: number;
+};
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -49,6 +53,12 @@ export async function createWin(_previous: WinFormState, formData: FormData): Pr
 
   const result = await insertWin(userId, parsed.data);
   if ("error" in result) return { error: result.error };
+
+  // Home keeps the writer where they are, so the streak lights up in place.
+  if (formData.get("stay") === "1") {
+    refresh();
+    return { error: null, savedAt: Date.now() };
+  }
 
   redirect(`/wins/${result.id}/added`);
 }

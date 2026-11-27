@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
-import { ChevronRight, Settings } from "lucide-react";
+import { ChevronRight, Mail, Settings } from "lucide-react";
 import { JarFilters } from "@/components/jar/jar-filters";
 import { JarIllustration } from "@/components/jar/jar-illustration";
 import { OnThisDayCard } from "@/components/jar/on-this-day-card";
@@ -105,6 +105,20 @@ async function Jar({ searchParams }: Pick<PageProps<"/jar">, "searchParams">) {
               <ChevronRight className="size-5 text-ink-muted" strokeWidth={1.75} aria-hidden="true" />
             </Link>
           )}
+          {/* Phones have no Letters tab any more, so letters are reached from here. */}
+          <Link
+            href="/letters"
+            className="flex min-h-12 items-center justify-between gap-4 rounded-lg bg-dusk p-6 text-on-dusk transition-shadow duration-200 hover:shadow-card"
+          >
+            <span className="flex items-center gap-4">
+              <Mail className="size-6 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+              <span>
+                <span className="block text-label opacity-80">Letters to future you</span>
+                <span className="font-serif text-title">Write or open a letter</span>
+              </span>
+            </span>
+            <ChevronRight className="size-5" strokeWidth={1.75} aria-hidden="true" />
+          </Link>
         </div>
       </div>
 

@@ -11,6 +11,7 @@ const initialState: SettingsState = { status: "idle", message: null };
 type SettingsFormProps = {
   username: string;
   nudgeTime: Enums<"nudge_time">;
+  glowReminders: boolean;
   quietStart: string;
   quietEnd: string;
   defaultVisibility: Enums<"visibility">;
@@ -21,7 +22,15 @@ const sectionTitle = "font-serif text-title";
 const optionCard =
   "flex min-h-14 cursor-pointer flex-col justify-center rounded-md border border-line bg-surface-raised px-4 py-3 transition-colors duration-200 has-checked:border-dusk has-checked:bg-card-sky has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus-ring";
 
-export function SettingsForm({ username: initialUsername, nudgeTime, quietStart, quietEnd, defaultVisibility, timezone }: SettingsFormProps) {
+export function SettingsForm({
+  username: initialUsername,
+  nudgeTime,
+  glowReminders,
+  quietStart,
+  quietEnd,
+  defaultVisibility,
+  timezone,
+}: SettingsFormProps) {
   const [state, formAction, saving] = useActionState(updateSettings, initialState);
   const [username, setUsername] = useState(initialUsername);
   const [shuffling, startShuffle] = useTransition();
@@ -66,7 +75,9 @@ export function SettingsForm({ username: initialUsername, nudgeTime, quietStart,
 
       <fieldset>
         <legend className={sectionTitle}>Daily nudge</legend>
-        <p className="mt-1 text-ink-muted">One gentle reminder a day to notice something that went right.</p>
+        <p className="mt-1 text-ink-muted">
+          One gentle reminder, only on days you haven&apos;t added a win yet, and never at night.
+        </p>
         <div className="mt-4 grid grid-cols-2 gap-3">
           {NUDGE_OPTIONS.map((option) => (
             <label key={option.value} className={optionCard}>
@@ -82,12 +93,22 @@ export function SettingsForm({ username: initialUsername, nudgeTime, quietStart,
             </label>
           ))}
         </div>
+        <label className="mt-4 flex min-h-11 cursor-pointer items-center gap-3 text-label text-ink">
+          <input
+            type="checkbox"
+            name="glow_reminders"
+            defaultChecked={glowReminders}
+            className="size-5 accent-[var(--color-dusk)]"
+          />
+          Send it as a notification
+        </label>
+        <p className="text-caption text-ink-muted">Notifications arrive once you turn them on with weekly cheer-ups below.</p>
       </fieldset>
 
       <fieldset>
         <legend className={sectionTitle}>Quiet hours</legend>
         <p className="mt-1 text-ink-muted">
-          No cheer-ups arrive between these times. They follow your timezone ({timezone.replaceAll("_", " ")}).
+          No reminders or cheer-ups arrive between these times. They follow your timezone ({timezone.replaceAll("_", " ")}).
         </p>
         <div className="mt-4 grid grid-cols-2 gap-3">
           <label className="flex flex-col gap-1 text-label text-ink">

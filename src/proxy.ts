@@ -17,7 +17,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (userId && pathname === "/") {
-    return redirectWithCookies(request, response, "/feed");
+    return redirectWithCookies(request, response, "/home");
   }
 
   return response;

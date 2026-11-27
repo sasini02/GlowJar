@@ -33,5 +33,5 @@ export async function GET(request: NextRequest) {
     .eq("user_id", claims?.claims.sub ?? "")
     .maybeSingle();
 
-  return NextResponse.redirect(`${origin}${profile?.onboarded_at ? "/feed" : "/setup"}`);
+  return NextResponse.redirect(`${origin}${profile?.onboarded_at ? "/home" : "/setup"}`);
 }

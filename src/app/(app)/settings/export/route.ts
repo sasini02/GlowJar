@@ -11,8 +11,12 @@ export async function GET() {
   if (!profile) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
 
   const supabase = await createClient();
-  const [{ data: profileRow }, { data: wins, error: winsError }, { data: letters, error: lettersError }] =
-    await Promise.all([
+  const [
+    { data: profileRow },
+    { data: wins, error: winsError },
+    { data: letters, error: lettersError },
+    { data: moods, error: moodsError },
+  ] = await Promise.all([
       supabase
         .from("profiles")
         .select("username, timezone, nudge_time, cheerups_enabled, quiet_start, quiet_end, theme, default_visibility, created_at")
@@ -28,10 +32,15 @@ export async function GET() {
         .select("id, deliver_on, delivered_at, created_at")
         .eq("user_id", profile.user_id)
         .order("created_at"),
+      supabase
+        .from("moods")
+        .select("local_date, level, tags, note, created_at, updated_at")
+        .eq("user_id", profile.user_id)
+        .order("local_date"),
     ]);
 
-  if (winsError || lettersError) {
-    console.error("export failed", winsError?.message, lettersError?.message);
+  if (winsError || lettersError || moodsError) {
+    console.error("export failed", winsError?.message, lettersError?.message, moodsError?.message);
     return NextResponse.json({ error: "We couldn't prepare your data just now." }, { status: 500 });
   }
 
@@ -64,6 +73,7 @@ export async function GET() {
       },
     })),
     letters: exportedLetters,
+    moods,
   };
 
   return new NextResponse(JSON.stringify(payload, null, 2), {

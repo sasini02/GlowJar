@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, Fraunces } from "next/font/google";
+import { DEV_SW_RESET_SCRIPT } from "@/lib/dev-sw-reset";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${fraunces.variable} ${dmSans.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+        {process.env.NODE_ENV !== "production" && <script dangerouslySetInnerHTML={{ __html: DEV_SW_RESET_SCRIPT }} />}
       </head>
       <body className="min-h-dvh">{children}</body>
     </html>

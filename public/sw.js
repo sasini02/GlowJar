@@ -84,14 +84,14 @@ self.addEventListener("push", (event) => {
       icon: "/icons/icon-192.png",
       badge: "/icons/badge-96.png",
       tag: payload.tag || "glowjar",
-      data: { url: payload.url || "/feed" },
+      data: { url: payload.url || "/home" },
     }),
   );
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const target = new URL(event.notification.data?.url || "/feed", self.location.origin).href;
+  const target = new URL(event.notification.data?.url || "/home", self.location.origin).href;
 
   event.waitUntil(
     (async () => {

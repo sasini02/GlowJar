@@ -14,7 +14,9 @@
     "db:test": "node scripts/db-test.mjs",
     "db:test:docker": "supabase test db --remote",
     "db:types": "supabase gen types --lang=typescript --remote > src/lib/supabase/database.types.ts",
-    "icons": "node scripts/build-icons.mjs"
+    "icons": "node scripts/build-icons.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -36,7 +38,8 @@
     "sharp": "^0.35.5",
     "supabase": "^3.3.0",
     "tailwindcss": "4.3.3",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^5.1.2"
   },
   "engines": {
     "node": ">=20.9"

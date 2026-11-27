@@ -18,6 +18,9 @@ export type Profile = Pick<
   | "theme"
   | "quiet_start"
   | "quiet_end"
+  | "best_streak"
+  | "jar_style"
+  | "glow_reminders_enabled"
 >;
 
 /** The signed-in user's id, or null. Cached for the length of one request. */
@@ -43,7 +46,7 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
   const { data } = await supabase
     .from("profiles")
     .select(
-      "user_id, username, timezone, default_visibility, nudge_time, cheerups_enabled, onboarded_at, is_moderator, theme, quiet_start, quiet_end",
+      "user_id, username, timezone, default_visibility, nudge_time, cheerups_enabled, onboarded_at, is_moderator, theme, quiet_start, quiet_end, best_streak, jar_style, glow_reminders_enabled",
     )
     .eq("user_id", userId)
     .maybeSingle();

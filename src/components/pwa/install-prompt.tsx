@@ -29,7 +29,7 @@ function isIosSafari(): boolean {
   return ios && /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua);
 }
 
-/** A quiet card offering to add Glowjar to the home screen. Shown once until dismissed. */
+/** A quiet card offering to add Glowjar to the home screen. Once closed, it stays closed on this device. */
 export function InstallPrompt() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [showIosHint, setShowIosHint] = useState(false);
@@ -38,7 +38,11 @@ export function InstallPrompt() {
     if (isStandalone() || wasDismissed()) return;
 
     function onBeforeInstall(event: Event) {
+      // Keeps the browser's own install banner from appearing on top of ours.
       event.preventDefault();
+      // Chrome fires this again as people move between pages, so the saved
+      // "Not now" has to be checked every time, not just when the app first loads.
+      if (wasDismissed()) return;
       setDeferred(event as BeforeInstallPromptEvent);
     }
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
